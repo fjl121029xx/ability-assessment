@@ -45,11 +45,11 @@ object AbilityAssessment {
     answer_card_df.cache()
 
 
-    answer_card_df.flatMap(f=>{
-      val arr = new ArrayBuffer[Tuple10[]]()
+//    answer_card_df.flatMap(f=>{
+//      val arr = new ArrayBuffer[Tuple10[]]()
 
-      arr.iterator
-    })
+//      arr.iterator
+//    })
     answer_card_df.take(10000).foreach(println)
 
     //    answer_card_df.take(1).foreach(println)
