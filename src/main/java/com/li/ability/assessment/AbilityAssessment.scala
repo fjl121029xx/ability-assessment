@@ -1,11 +1,11 @@
 package com.li.ability.assessment
 
-import org.apache.spark.SparkConf
-import org.apache.spark.sql.{Row, SparkSession}
-import com.mongodb.spark.config._
 
-import scala.collection.mutable.ArrayBuffer
+import org.apache.spark.{SparkConf, SparkContext}
+import com.mongodb.spark.config.ReadConfig
+import org.apache.spark.sql.SparkSession
 
+import scala.collection.mutable.Map
 
 object AbilityAssessment {
 
@@ -17,56 +17,83 @@ object AbilityAssessment {
 
     val conf = new SparkConf()
       .setAppName("AbilityAssessment")
-      //      .setMaster("local[13]")
+      .setMaster("local[13]")
       .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+      .set("spark.mongodb.input.uri", inputUrl)
+      .set("spark.debug.maxToStringFields", "100")
+      .set("spark.mongodb.input.partitioner", "MongoPaginateBySizePartitioner")
+      .set("spark.mongodb.input.partitionerOptions.partitionKey", "_id")
+      .set("spark.mongodb.input.partitionerOptions.partitionSizeMB", "1024")
+      .set("spark.mongodb.keep_alive_ms", "3600000000000")
 
-    val sql = SparkSession.builder
-      .config(conf)
-      .config("spark.mongodb.input.uri", inputUrl)
-      .config("spark.mongodb.input.collection", collection)
-      .config("spark.debug.maxToStringFields", 100)
-      .getOrCreate()
+    import com.mongodb.spark.sql._
+    val sparkSession = SparkSession.builder().config(conf).getOrCreate()
 
-    import sql.implicits._
+    import sparkSession.implicits._
+    // spark context
+    val sc = sparkSession.sparkContext
+    val last_week_start = sc.broadcast(TimeUtils.getLastWeekStartTimeStamp())
+    val last_week_end = sc.broadcast(TimeUtils.getLastWeekendTimeStamp())
+    // ztk_question
+    /**
+      * 获得题到知识点的映射
+      */
+    val ztk_question = sparkSession.loadFromMongoDB(
+      ReadConfig(
+        Map(
+          "uri" -> inputUrl.concat(".ztk_question"),
+          "readPreference.name" -> "secondaryPreferred"
+        ))).toDF() // Uses the ReadConfig
+    ztk_question.createOrReplaceTempView("ztk_question")
 
-    val mongo = sql.read.format("com.mongodb.spark.sql").options(
-      Map("spark.mongodb.input.uri" -> inputUrl,
-        "spark.mongodb.input.partitioner" -> "MongoPaginateBySizePartitioner",
-        "spark.mongodb.input.partitionerOptions.partitionKey" -> "_id",
-        "spark.mongodb.input.partitionerOptions.partitionSizeMB" -> "1024",
-        "spark.mongodb.keep_alive_ms" -> "3600000000000"
-      )
-    ).load
+
+    val map = sparkSession.sql("select _id,points from ztk_question").rdd.filter { r =>
+      var flag = true
+
+      flag = !r.isNullAt(0) && !r.isNullAt(1) && r.getSeq(1).nonEmpty
+      if (flag){
+        flag = r.get(0).getClass.getName match {
+          case "java.lang.Double" => false
+          case _ => true
+        }
+      }
+      flag
+    }.map {
+        r =>
+          val _id: Int = r.getInt(0)
+          val pid: Int = r.getSeq(1).head
+          (_id, pid)
+      }.collectAsMap()
+    //    val q2p = sc.broadcast(map.collectAsMap())
+    /**
+      * mongo 214024
+      * spark 205846
+      */
+    val q2p = sc.broadcast(map)
+
+    // ztk_answer_card
+    val ztk_answer_card = sparkSession.loadFromMongoDB(
+      ReadConfig(
+        Map(
+          "uri" -> inputUrl.concat(".ztk_answer_card"),
+          "readPreference.name" -> "secondaryPreferred"
+        )
+      )).toDF() // Uses the ReadConfig
+    ztk_answer_card.createOrReplaceTempView("ztk_answer_card")
+    sparkSession.sql("select userId,points from ztk_answer_card ")
+    // val total_station = mongo.select("userId", "subject", "catgory", "expendTime", "createTime", "corrects", "paper.questions", "paper.modules", "StringCount")
+
+
+    //    ztk_answer_card.printSchema()
+    //    ztk_question.printSchema()
+    //    val lastWekk = ztk_answer_card.filter(ztk_answer_card("createTime") >= last_week_start.value && ztk_answer_card("createTime") < last_week_end.value)
+    //    sparkSession.sql("select userId,count(*) from ztk_answer_card group by userId").repartition(10).rdd.saveAsTextFile(args(0))
 
     /**
-      * 全站数据
+      * 上周数据
       */
-    val total_station = mongo.select("userId", "subject", "catgory", "expendTime", "createTime", "corrects", "paper.questions", "paper.modules", "times")
-    //      .map(t => (t.getLong(0), t.getInt(1), t.getInt(2), t.getInt(3), t.getLong(4), t.getSeq(5), t.getSeq(6), t.getSeq(7), t.getSeq(8)))
-    //      .rdd
-    total_station.cache()
+    //    lastWekk.rdd.saveAsTextFile(args(0))
 
-    //    val resut = total_station.map(t => (t.getLong(0), (t.getInt(1), t.getInt(2), t.getInt(3), t.getLong(4), t.getSeq(5), t.getSeq(6), t.getSeq(7), t.getSeq(8))))
-    //      .rdd
-
-    val resut = total_station.map(t => (t.getLong(0), 1)).rdd.reduceByKey(_ + _)
-
-    //    val last_week = total_station.filter(f =>
-    //      TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis() - 7 * 86400000L, "yyyy-w").compareTo(TimeUtils.convertTimeStamp2DateStr(f._4, "yyyy-w")) == 0
-    //    )
-
-
-    //    answer_card_df.flatMap(f=>{
-    //      val arr = new ArrayBuffer[Tuple10[]]()
-
-    //      arr.iterator
-    //    })
-    //    answer_card_df.take(1).foreach(println)
-
-    //    answer_card_df.take(1).foreach(println)
-    //   val answer_card_rdd = answer_card_df.rdd.repartition(1)
-    //    answer_card_df.rdd.saveAsTextFile("hdfs://master/ztk_question_record/ztk_answer_card/")
-    resut.saveAsTextFile(args(0))
   }
 
 }
