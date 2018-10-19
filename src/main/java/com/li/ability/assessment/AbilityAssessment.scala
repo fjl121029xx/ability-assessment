@@ -46,12 +46,11 @@ object AbilityAssessment {
         ))).toDF() // Uses the ReadConfig
     ztk_question.createOrReplaceTempView("ztk_question")
 
-
     val map = sparkSession.sql("select _id,points from ztk_question").rdd.filter { r =>
       var flag = true
 
       flag = !r.isNullAt(0) && !r.isNullAt(1) && r.getSeq(1).nonEmpty
-      if (flag){
+      if (flag) {
         flag = r.get(0).getClass.getName match {
           case "java.lang.Double" => false
           case _ => true
@@ -59,15 +58,16 @@ object AbilityAssessment {
       }
       flag
     }.map {
-        r =>
-          val _id: Int = r.getInt(0)
-          val pid: Int = r.getSeq(1).head
-          (_id, pid)
-      }.collectAsMap()
+      r =>
+        val _id: Int = r.getInt(0)
+        val pid: Int = r.getSeq(1).head
+        (_id, pid)
+    }.collectAsMap()
     //    val q2p = sc.broadcast(map.collectAsMap())
     /**
       * mongo 214024
       * spark 205846
+      * the mapping of the knowledge to points
       */
     val q2p = sc.broadcast(map)
 
@@ -80,19 +80,57 @@ object AbilityAssessment {
         )
       )).toDF() // Uses the ReadConfig
     ztk_answer_card.createOrReplaceTempView("ztk_answer_card")
-    sparkSession.sql("select userId,points from ztk_answer_card ")
+    val card = sparkSession.sql("select userId,corrects,paper.questions,times from ztk_answer_card ").limit(30)
+
+    /**
+      * +-------+--------------------+--------------------+--------------------+
+      * | userId|            corrects|           questions|               times|
+      * +-------+--------------------+--------------------+--------------------+
+      * | 420991|[2, 2, 2, 2, 2, 2...|[55309, 55308, 55...|[1, 1, 1, 1, 1, 0...|
+      * | 420991|[2, 2, 2, 2, 2, 1...|[48997, 48998, 33...|[8, 5, 1, 1, 1, 1...|
+      * |7741045|[2, 2, 2, 1, 2, 2...|[55014, 55010, 55...|[0, 0, 0, 0, 0, 0...|
+      * |7741045|[2, 1, 1, 1, 2, 2...|[42063, 40509, 41...|[4, 2, 3, 3, 9, 3...|
+      * | 697154|[1, 2, 2, 0, 2, 1...|[31770, 33252, 33...|[1, 5, 1, 0, 6, 1...|
+      * |7792877|[1, 1, 1, 1, 1, 1...|[38859, 38860, 38...|[74, 37, 24, 18, ...|
+      * |7741045|[0, 0, 0, 0, 0, 0...|[49585, 51696, 48...|[0, 0, 0, 0, 0, 0...|
+      * |7792897|[0, 0, 0, 0, 0, 0...|[50802, 52672, 53...|[0, 0, 0, 0, 0, 0...|
+      * | 947136|[1, 1, 1, 2, 1, 1...|[34670, 31402, 33...|[1, 2, 1, 1, 2, 0...|
+      * |7792929|[2, 2, 2, 2, 1, 2...|[39380, 39381, 39...|[5, 2, 1, 1, 1, 0...|
+      * |7792929|[2, 2, 2, 1, 2, 2...|[37632, 37633, 37...|[10, 5, 3, 2, 2, ...|
+      * |7792929|[0, 0, 0, 0, 0, 0...|[37632, 37633, 37...|[0, 0, 0, 0, 0, 0...|
+      * |7792929|[0, 0, 0, 0, 0, 0...|[37632, 37633, 37...|[0, 0, 0, 0, 0, 0...|
+      * |7792929|[2, 1, 1, 2, 2, 0...|[39860, 39861, 39...|[5, 2, 1, 1, 1, 0...|
+      * |7792929|[2, 2, 1, 0, 0, 0...|[40085, 40086, 40...|[9, 4, 3, 0, 0, 0...|
+      * |3009998|[0, 0, 0, 0, 1, 0...|[51987, 47987, 49...|[0, 0, 0, 0, 9, 0...|
+      * |3009998|[0, 0, 0, 0, 0, 0...|[50802, 50798, 50...|[0, 0, 0, 0, 0, 0...|
+      * |7774833|[1, 2, 2, 1, 1, 1...|[48976, 53658, 48...|[1, 1, 1, 1, 8, 1...|
+      * |7792929|[2, 1, 1, 2, 2, 1...|[37632, 37633, 37...|[4, 2, 1, 1, 0, 0...|
+      * | 420991|[2, 2, 2, 2, 2, 2...|[33310, 33304, 33...|[1, 2, 3, 2, 1, 1...|
+      * |7792929|[1, 2, 2, 2, 2, 1...|[42517, 42518, 42...|[5, 2, 1, 1, 1, 0...|
+      * |3009998|[1, 2, 1, 0, 0, 0...|[42517, 42518, 42...|[29, 14, 9, 0, 0,...|
+      * |3009998|[0, 0, 0, 0, 0, 0...|[54762, 49534, 49...|[0, 0, 0, 0, 0, 0...|
+      * |7774833|[2, 0, 0, 0, 0, 0...|[38789, 38790, 38...|[180, 0, 0, 0, 0,...|
+      * |7792929|[2, 2, 2, 2, 2, 2...|[40307, 40308, 40...|[8, 4, 2, 2, 1, 1...|
+      * | 420991|[2, 1, 2, 2, 2, 1...|[48958, 33644, 33...|[1, 18, 1, 3, 7, ...|
+      * |7792929|[2, 2, 1, 2, 1, 2...|[38578, 38579, 38...|[7, 3, 2, 1, 1, 1...|
+      * |7792929|[2, 2, 2, 2, 2, 2...|[38067, 38068, 38...|[30, 15, 10, 7, 6...|
+      * |7792929|[2, 2, 2, 2, 2, 2...|[37942, 37943, 37...|[19, 9, 6, 4, 3, ...|
+      * | 420991|[1, 1, 1, 1, 2, 2...|[55296, 55292, 55...|[16, 0, 0, 8, 0, ...|
+      * +-------+--------------------+--------------------+--------------------+
+      */
     // val total_station = mongo.select("userId", "subject", "catgory", "expendTime", "createTime", "corrects", "paper.questions", "paper.modules", "StringCount")
 
 
-    //    ztk_answer_card.printSchema()
-    //    ztk_question.printSchema()
-    //    val lastWekk = ztk_answer_card.filter(ztk_answer_card("createTime") >= last_week_start.value && ztk_answer_card("createTime") < last_week_end.value)
-    //    sparkSession.sql("select userId,count(*) from ztk_answer_card group by userId").repartition(10).rdd.saveAsTextFile(args(0))
+
+
+
+
+
 
     /**
       * 上周数据
       */
-    //    lastWekk.rdd.saveAsTextFile(args(0))
+    card.show(30)
 
   }
 
