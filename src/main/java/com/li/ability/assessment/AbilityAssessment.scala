@@ -26,7 +26,7 @@ object AbilityAssessment {
 
     val conf = new SparkConf()
       .setAppName("AbilityAssessment")
-      .setMaster("local")
+      //      .setMaster("local[13]")
       .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
       .set("spark.mongodb.input.uri", inputUrl)
       .set("spark.debug.maxToStringFields", "100")
@@ -97,36 +97,36 @@ object AbilityAssessment {
       )).toDF() // Uses the ReadConfig
     ztk_answer_card.createOrReplaceTempView("ztk_answer_card")
     val card = sparkSession.sql("select userId,corrects,paper.questions,times,createTime from ztk_answer_card ")
-      .limit(10000)
-      //      .repartition(1000)
+      //      .limit(1000000)
+      .repartition(1000)
 
       .mapPartitions { rite =>
-      var arr = new ArrayBuffer[AnswerCard]()
-      val q2pMap = q2p.value
+        var arr = new ArrayBuffer[AnswerCard]()
+        val q2pMap = q2p.value
 
-      while (rite.hasNext) {
-        // answer card row
-        val ac = rite.next()
-        // qid to pid
-        // qids
-        val questions: Seq[Int] = ac.getSeq(2)
-        //
-        val points = new ArrayBuffer[Int]()
-        questions.foreach { qid =>
-          //            println(qid)
-          //            println(q2pMap.getOrElse(qid, 0))
-          //            if (qid == 55309) {
-          //              println(qid + "___" + q2pMap.get(qid))
-          //            }
-          val pid: Int = q2pMap.get(qid).get
-          points += pid
+        while (rite.hasNext) {
+          // answer card row
+          val ac = rite.next()
+          // qid to pid
+          // qids
+          val questions: Seq[Int] = ac.getSeq(2)
+          //
+          val points = new ArrayBuffer[Int]()
+          questions.foreach { qid =>
+            //            println(qid)
+            //            println(q2pMap.getOrElse(qid, 0))
+            //            if (qid == 55309) {
+            //              println(qid + "___" + q2pMap.get(qid))
+            //            }
+            val pid: Int = q2pMap.get(qid).get
+            points += pid
+          }
+
+          var answerCard = AnswerCard(ac.getLong(0), ac.getSeq(1), questions, ac.getSeq(3), points, ac.getLong(4))
+          arr += answerCard
         }
-
-        var answerCard = AnswerCard(ac.getLong(0), ac.getSeq(1), questions, ac.getSeq(3), points, ac.getLong(4))
-        arr += answerCard
-      }
-      arr.iterator
-    }.filter { ac => ac.userId.isValidLong && ac.corrects.nonEmpty && ac.points.nonEmpty && ac.corrects.nonEmpty && ac.times.nonEmpty }
+        arr.iterator
+      }.filter { ac => ac.userId.isValidLong && ac.corrects.nonEmpty && ac.points.nonEmpty && ac.corrects.nonEmpty && ac.times.nonEmpty }
       .toDF()
     card.cache()
     card.show(1000)
@@ -151,7 +151,7 @@ object AbilityAssessment {
       * cumulative_time 179|
       * week_predict_score -1:0:0:0]
       */
-    predicted_score.rdd.saveAsTextFile("ability-assessment/result_local_c")
+    predicted_score.rdd.saveAsTextFile(args(0))
     //      .rdd.saveAsTextFile(args(0))
   }
 
