@@ -30,12 +30,13 @@ class PredictedScore extends UserDefinedAggregateFunction {
       StructField("total_station_predict_score", StringType, true),
       StructField("do_exercise_num", ArrayType(IntegerType), true),
       StructField("cumulative_time", LongType, true),
-      StructField("week_predict_score", StringType, true)
+      StructField("week_predict_score", StringType, true),
+      StructField("createTime", LongType, true)
     ))
   }
 
 
-  override def dataType: DataType = StringType
+  override def dataType: DataType = ArrayType(StringType)
 
 
   override def deterministic: Boolean = true
@@ -43,10 +44,16 @@ class PredictedScore extends UserDefinedAggregateFunction {
 
   override def initialize(buffer: MutableAggregationBuffer): Unit = {
 
-    buffer.update(0, "-1:0:0_-1:0:0")
+    // total_station_predict_score
+    buffer.update(0, "-1:0:0:0_-1:0:0:0")
+    // do_exercise_num
     buffer.update(1, Array())
+    // cumulative_time
     buffer.update(2, 0L)
-    buffer.update(3, "-1:0:0_-1:0:0")
+    // week_predict_score
+    buffer.update(3, "-1:0:0:0_-1:0:0:0")
+    // createTime
+    buffer.update(4, 0L)
   }
 
 
@@ -54,23 +61,26 @@ class PredictedScore extends UserDefinedAggregateFunction {
 
     val corrects: scala.Seq[Int] = input.getSeq[Int](0)
     val points: scala.Seq[Int] = input.getSeq[Int](3)
-    val createTime = input.getLong(5)
+    val times: scala.Seq[Int] = input.getSeq[Int](2)
+
 
     // 记录本次update 知识点下的正确树立
-    var mutmap = Map[Int, (Int, Int)]()
+    var mutmap = Map[Int, (Int, Int, Int)]()
     // points.zip(corrects)
-    points.zip(corrects)
+    points.zip(corrects).zip(times)
       .foreach { f =>
-        val t = mutmap.getOrElse(f._1, (0, 0))
+        val t = mutmap.getOrElse(f._1._1, (0, 0, 0))
 
-        if (f._2 == 1) {
+        if (f._1._2 == 1) {
           val correct = t._1 + 1
           val total = t._2 + 1
-          mutmap += (f._1 -> (correct, total))
+          val tim = t._3 + f._2
+          mutmap += (f._1._1 -> (correct, total, tim))
         } else {
           val correct = t._1
           val total = t._2 + 1
-          mutmap += (f._1 -> (correct, total))
+          val tim = t._3 + f._2
+          mutmap += (f._1._1 -> (correct, total, tim))
         }
       }
     /**
@@ -90,12 +100,14 @@ class PredictedScore extends UserDefinedAggregateFunction {
       val point = f._1
       val correct = f._2._1
       val total = f._2._2
+      val time = f._2._3
 
-      val buffer_correct = bufferMap.getOrElse(f._1, (0, 0))._1
-      val buffer_total = bufferMap.getOrElse(f._1, (0, 0))._2
+      val buffer_correct = bufferMap.getOrElse(f._1, (0, 0, 0))._1
+      val buffer_total = bufferMap.getOrElse(f._1, (0, 0, 0))._2
+      val buffer_time = bufferMap.getOrElse(f._1, (0, 0, 0))._3
 
 
-      bufferMap += (point -> (buffer_correct + correct, buffer_total + total))
+      bufferMap += (point -> (buffer_correct + correct, buffer_total + total, buffer_time + time))
     }
     val upd = bufferMap.mkString("_")
       .replaceAll(" ", "")
@@ -124,10 +136,13 @@ class PredictedScore extends UserDefinedAggregateFunction {
     )
     buffer.update(2, timeBuffer)
 
+    val createTime = input.getLong(4)
     if (week_start <= createTime && createTime < week_end) {
       // mutmap 是本次输入
-      val weerk_predicted_score = PredictedScore.weekPredictedScore(mutmap, PredictedScore.getTSPredictScore2Map(buffer.getAs[String](4)))
-      buffer.update(4, weerk_predicted_score)
+      val week_predicted_score = PredictedScore.weekPredictedScore(mutmap, PredictedScore.getTSPredictScore2Map(buffer.getAs[String](3)))
+      buffer.update(3, week_predicted_score)
+    } else {
+      buffer.update(3, buffer.getAs[String](3))
     }
   }
 
@@ -135,7 +150,8 @@ class PredictedScore extends UserDefinedAggregateFunction {
   override def merge(aggreBuffer: MutableAggregationBuffer, row: Row): Unit = {
 
 
-    val total_station_predicted_score = PredictedScore.mergeMap(aggreBuffer.getAs[String](0), row.getAs[String](0)).mkString("_")
+    val total_station_predicted_score = PredictedScore.mergeMap(aggreBuffer.getAs[String](0), row.getAs[String](0))
+      .mkString("_")
       .replaceAll(" ", "")
       .replaceAll("->\\(", ":")
       .replaceAll("\\)", "")
@@ -156,13 +172,13 @@ class PredictedScore extends UserDefinedAggregateFunction {
     aggreBuffer.update(2, row.getLong(2) + aggreBuffer.getLong(2))
 
 
-    val week_predicted_score = PredictedScore.mergeMap(aggreBuffer.getAs[String](4), row.getAs[String](4)).mkString("_")
+    val week_predicted_score = PredictedScore.mergeMap(aggreBuffer.getAs[String](3), row.getAs[String](3)).mkString("_")
       .replaceAll(" ", "")
       .replaceAll("->\\(", ":")
       .replaceAll("\\)", "")
       .replaceAll(",", ":")
 
-    aggreBuffer.update(4, week_predicted_score)
+    aggreBuffer.update(3, week_predicted_score)
   }
 
   override def evaluate(buffer: Row): Any = {
@@ -172,7 +188,12 @@ class PredictedScore extends UserDefinedAggregateFunction {
     val cumulative_time = buffer.getAs[Long](2)
     val week_predict_score = buffer.getAs[String](3)
 
-    total_station_predict_score.concat("|").concat(do_exercise_num.toString).concat("|").concat(cumulative_time.toString).concat("|").concat(week_predict_score.toString)
+    Array(
+      total_station_predict_score.replaceAll("-1:0:0:0_",""),
+      do_exercise_num,
+      cumulative_time,
+      week_predict_score
+    )
   }
 }
 
@@ -180,20 +201,20 @@ object PredictedScore {
   /**
     * -1:0:0_-1:0:0
     */
-  def getTSPredictScore2Map(str: String): scala.collection.mutable.Map[Int, (Int, Int)] = {
+  def getTSPredictScore2Map(str: String): scala.collection.mutable.Map[Int, (Int, Int, Int)] = {
 
-    var mutmap = Map[Int, (Int, Int)]()
+    var mutmap = Map[Int, (Int, Int, Int)]()
     val total_station_predict_score = str
 
     total_station_predict_score.split("_").foreach(f => {
       val arr = f.split(":")
-      mutmap += (arr(0).toInt -> (arr(1).toInt, arr(2).toInt))
+      mutmap += (arr(0).toInt -> (arr(1).toInt, arr(2).toInt, arr(3).toInt))
     })
 
     mutmap
   }
 
-  def mergeMap(in: String, buffer: String): Map[Int, (Int, Int)] = {
+  def mergeMap(in: String, buffer: String): Map[Int, (Int, Int, Int)] = {
 
     val inMap = PredictedScore.getTSPredictScore2Map(in)
 
@@ -203,24 +224,27 @@ object PredictedScore {
       val point = f._1
       val correct = f._2._1
       val total = f._2._2
+      val tim = f._2._3
 
-      val count = bufferMap.getOrElse(f._1, (0, 0))
-      bufferMap += (point -> (count._1 + correct, count._2 + total))
+      val count = bufferMap.getOrElse(f._1, (0, 0, 0))
+      bufferMap += (point -> (count._1 + correct, count._2 + total, count._3 + tim))
     }
     bufferMap
   }
 
-  def weekPredictedScore(mutmap: Map[Int, (Int, Int)], map: scala.collection.mutable.Map[Int, (Int, Int)]) = {
+  def weekPredictedScore(mutmap: Map[Int, (Int, Int, Int)], map: scala.collection.mutable.Map[Int, (Int, Int, Int)]) = {
     mutmap.foreach { f =>
       val point = f._1
       val correct = f._2._1
       val total = f._2._2
+      val tim = f._2._3
 
-      val buffer_correct = map.getOrElse(f._1, (0, 0))._1
-      val buffer_total = map.getOrElse(f._1, (0, 0))._2
+      val buffer_correct = map.getOrElse(f._1, (0, 0, 0))._1
+      val buffer_total = map.getOrElse(f._1, (0, 0, 0))._2
+      val buffer_time = map.getOrElse(f._1, (0, 0, 0))._3
 
 
-      map += (point -> (buffer_correct + correct, buffer_total + total))
+      map += (point -> (buffer_correct + correct, buffer_total + total, buffer_time + tim))
     }
 
     map.mkString("_")
