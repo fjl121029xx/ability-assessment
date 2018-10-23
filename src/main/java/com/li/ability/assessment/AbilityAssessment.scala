@@ -13,7 +13,8 @@ case class AnswerCard(userId: Long,
                       corrects: Seq[Int],
                       questions: Seq[Int],
                       times: Seq[Int],
-                      points: Seq[Int])
+                      points: Seq[Int],
+                      createTime:Long)
 
 object AbilityAssessment {
 
@@ -25,12 +26,12 @@ object AbilityAssessment {
 
     val conf = new SparkConf()
       .setAppName("AbilityAssessment")
-//                  .setMaster("local")
+      //      .setMaster("local")
       .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
       .set("spark.mongodb.input.uri", inputUrl)
       .set("spark.debug.maxToStringFields", "100")
       .set("spark.mongodb.input.partitioner", "MongoPaginateBySizePartitioner")
-      .set("spark.mongodb.input.partitionerOptions.partitionKey", "_id")
+
       .set("spark.mongodb.input.partitionerOptions.partitionSizeMB", "1024")
       .set("spark.mongodb.keep_alive_ms", "3600000000000")
       .registerKryoClasses(Array(classOf[scala.collection.mutable.WrappedArray.ofRef[_]], classOf[AnswerCard]))
@@ -41,8 +42,7 @@ object AbilityAssessment {
     import sparkSession.implicits._
     // spark context
     val sc = sparkSession.sparkContext
-    val last_week_start = sc.broadcast(TimeUtils.getLastWeekStartTimeStamp())
-    val last_week_end = sc.broadcast(TimeUtils.getLastWeekendTimeStamp())
+
     // ztk_question
     /**
       * 获得题到知识点的映射
@@ -51,10 +51,17 @@ object AbilityAssessment {
       ReadConfig(
         Map(
           "uri" -> inputUrl.concat(".ztk_question"),
-          "readPreference.name" -> "secondaryPreferred"
-        ))).toDF() // Uses the ReadConfig
+          "readPreference.name" -> "secondaryPreferred",
+          "partitionKey" -> "_id")
+      )).toDF() // Uses the ReadConfig
     ztk_question.createOrReplaceTempView("ztk_question")
-    val map = sparkSession.sql("select _id,points from ztk_question").rdd.filter { r =>
+    //    val q2p = sc.broadcast(map.collectAsMap())
+    /**
+      * mongo 214024
+      * spark 205846
+      * the mapping of the knowledge to points
+      */
+    val q2p = sc.broadcast(sparkSession.sql("select _id,points from ztk_question").rdd.filter { r =>
       var flag = true
 
       flag = !r.isNullAt(0) && !r.isNullAt(1) && r.getSeq(1).nonEmpty
@@ -73,27 +80,24 @@ object AbilityAssessment {
         //          println(_id + "___" + pid)
         //        }
         (_id, pid)
-    }.collectAsMap()
-    //    val q2p = sc.broadcast(map.collectAsMap())
-    /**
-      * mongo 214024
-      * spark 205846
-      * the mapping of the knowledge to points
-      */
-    val q2p = sc.broadcast(map)
-    println(q2p.value)
+    }.collectAsMap())
+    //    Thread.sleep(5000)
+    println(q2p.value.size)
     // ztk_answer_card
     val ztk_answer_card = sparkSession.loadFromMongoDB(
       ReadConfig(
         Map(
           "uri" -> inputUrl.concat(".ztk_answer_card"),
-          "readPreference.name" -> "secondaryPreferred"
+          "readPreference.name" -> "secondaryPreferred",
+          "partitionKey" -> "userId",
+          "samplesPerPartition" -> "10000"
         )
       )).toDF() // Uses the ReadConfig
     ztk_answer_card.createOrReplaceTempView("ztk_answer_card")
-    val card = sparkSession.sql("select userId,corrects,paper.questions,times from ztk_answer_card ")
-//            .limit(1000)
+    val card = sparkSession.sql("select userId,corrects,paper.questions,times,createTime from ztk_answer_card ")
+      .limit(10000000)
       .repartition(1000)
+
       .mapPartitions { rite =>
         var arr = new ArrayBuffer[AnswerCard]()
         val q2pMap = q2p.value
@@ -116,25 +120,27 @@ object AbilityAssessment {
             points += pid
           }
 
-          var answerCard = new AnswerCard(ac.getLong(0), ac.getSeq(1), questions, ac.getSeq(3), points)
+          var answerCard = new AnswerCard(ac.getLong(0), ac.getSeq(1), questions, ac.getSeq(3), points,ac.getLong(4))
           arr += answerCard
         }
         arr.iterator
-      }.toDF()
-
-
+      }.filter {
+      ac =>
+        var flag =true
+        val userId = ac.userId
+        ac.corrects
+        ac.points
+        ac.corrects
+        ac.times
+        flag
+    }.toDF()
+    card.cache()
+    card.show(1000)
     // val total_station = mongo.select("userId", "subject", "catgory", "expendTime", "createTime", "corrects", "paper.questions", "paper.modules", "StringCount")
     card.createOrReplaceTempView("answer_card")
     sparkSession.udf.register("predictedScore", new PredictedScore)
-    sparkSession.sql("select userId,predictedScore(corrects,questions,times,points) predictedScore from answer_card group by userId")
-//                  .limit(30).show(30)
+    sparkSession.sql("select userId,predictedScore(corrects,questions,times,points,createTime) predictedScore from answer_card group by userId")
+      //      .rdd.saveAsTextFile("hdfs://huatu68/huatu/ability-assessment/result_local_b")
       .rdd.saveAsTextFile(args(0))
-
-    /**
-      * 上周数据
-      */
-    //    card.show(30)
-
   }
-
 }

@@ -106,14 +106,14 @@ object TimeUtils {
   }
 
   //上周第一天
-  def getLastWeekStartTimeStamp(): Long = {
-    convertDateStr2TimeStamp(TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis(), "yyyy-w"), "yyyy-w") - 6 * 86400000L
+  def getWeekStartTimeStamp(): Long = {
+    convertDateStr2TimeStamp(TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis() - 14400000, "yyyy-w"), "yyyy-w") + 8 * 86400000L
   }
 
   //上周最后一天
-  def getLastWeekendTimeStamp(): Long = {
+  def getWeekendTimeStamp(): Long = {
 
-    convertDateStr2TimeStamp(TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis(), "yyyy-w"), "yyyy-w") + 86400000L
+    convertDateStr2TimeStamp(TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis() - 14400000, "yyyy-w"), "yyyy-w") + 86400000L
   }
 
   def main(args: Array[String]): Unit = {
