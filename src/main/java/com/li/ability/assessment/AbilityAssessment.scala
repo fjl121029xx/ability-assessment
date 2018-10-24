@@ -92,15 +92,16 @@ object AbilityAssessment {
           "uri" -> inputUrl.concat(".ztk_answer_card"),
           "readPreference.name" -> "secondaryPreferred",
           "partitionKey" -> "userId",
+          "maxBatchSize" -> "500000",
           "samplesPerPartition" -> "10000"
         )
       )).toDF() // Uses the ReadConfig
     ztk_answer_card.createOrReplaceTempView("ztk_answer_card")
     val card = sparkSession.sql("select userId,corrects,paper.questions,times,createTime from ztk_answer_card ")
-      .limit(1000000)
-      .repartition(1000)
+      .limit(args(1).toInt)
+      .repartition(args(2).toInt)
       .rdd.filter(f =>
-      !f.isNullAt(0) && !f.isNullAt(1) && !f.isNullAt(2) && !f.isNullAt(3) && !f.isNullAt(4)
+      !f.isNullAt(0) && !f.isNullAt(1) && !f.isNullAt(2) && f.getSeq(2).nonEmpty && !f.isNullAt(3) && !f.isNullAt(4)
     )
       .mapPartitions { rite =>
         var arr = new ArrayBuffer[AnswerCard]()
@@ -120,7 +121,7 @@ object AbilityAssessment {
             //            if (qid == 55309) {
             //              println(qid + "___" + q2pMap.get(qid))
             //            }
-            val pid: Int = q2pMap.get(qid).get
+            val pid: Int = q2pMap.getOrElse(qid, 0)
             points += pid
           }
 
