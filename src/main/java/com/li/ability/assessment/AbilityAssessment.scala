@@ -5,6 +5,7 @@ import com.li.ability.assessment.udaf.PredictedScore
 import org.apache.spark.{SparkConf, SparkContext}
 import com.mongodb.spark.config.ReadConfig
 import org.apache.spark.sql.SparkSession
+import org.apache.spark.storage.StorageLevel
 
 import scala.collection.mutable.{ArrayBuffer, Map}
 
@@ -19,7 +20,7 @@ case class AnswerCard(userId: Long,
 object AbilityAssessment {
 
   def main(args: Array[String]): Unit = {
-
+//
 
     val inputUrl = "mongodb://huatu_ztk:wEXqgk2Q6LW8UzSjvZrs@192.168.100.153:27017,192.168.100.154:27017,192.168.100.155:27017/huatu_ztk"
     val collection = "ztk_answer_card"
@@ -30,8 +31,8 @@ object AbilityAssessment {
       .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
       .set("spark.mongodb.input.uri", inputUrl)
       .set("spark.debug.maxToStringFields", "100")
-      .set("spark.mongodb.input.partitioner", "MongoPaginateBySizePartitioner")
-      .set("spark.mongodb.input.partitionerOptions.partitionSizeMB", "1024")
+      .set("spark.mongodb.input.partitioner", "MongoSamplePartitioner")
+      .set("spark.mongodb.input.partitionerOptions.partitionSizeMB", args(3))
       .set("spark.mongodb.keep_alive_ms", "3600000000000")
       .registerKryoClasses(Array(classOf[scala.collection.mutable.WrappedArray.ofRef[_]], classOf[AnswerCard]))
 
@@ -90,23 +91,23 @@ object AbilityAssessment {
       ReadConfig(
         Map(
           "uri" -> inputUrl.concat(".ztk_answer_card"),
+          "partitioner"-> "MongoSamplePartitioner",
           "readPreference.name" -> "secondaryPreferred",
           "partitionKey" -> "userId",
-          "maxBatchSize" -> "500000",
+          "maxBatchSize" -> "100000",
           "samplesPerPartition" -> "10000"
         )
       )).toDF() // Uses the ReadConfig
     ztk_answer_card.createOrReplaceTempView("ztk_answer_card")
     val card = sparkSession.sql("select userId,corrects,paper.questions,times,createTime from ztk_answer_card ")
-      .limit(args(1).toInt)
-      .repartition(args(2).toInt)
+      .repartition(args(1).toInt)
       .rdd.filter(f =>
       !f.isNullAt(0) && !f.isNullAt(1) && !f.isNullAt(2) && f.getSeq(2).nonEmpty && !f.isNullAt(3) && !f.isNullAt(4)
     )
       .mapPartitions { rite =>
         var arr = new ArrayBuffer[AnswerCard]()
         val q2pMap = q2p.value
-
+        println(q2pMap.size)
         while (rite.hasNext) {
           // answer card row
           val ac = rite.next()
@@ -131,7 +132,7 @@ object AbilityAssessment {
         arr.iterator
       }
       .toDF()
-    card.cache()
+    card.persist(StorageLevel.MEMORY_AND_DISK_SER_2)
     card.show(1000)
 
     // val total_station = mongo.select("userId", "subject", "catgory", "expendTime", "createTime", "corrects", "paper.questions", "paper.modules", "StringCount")
