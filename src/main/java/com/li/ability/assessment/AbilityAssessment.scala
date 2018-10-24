@@ -20,7 +20,7 @@ case class AnswerCard(userId: Long,
 object AbilityAssessment {
 
   def main(args: Array[String]): Unit = {
-//
+
 
     val inputUrl = "mongodb://huatu_ztk:wEXqgk2Q6LW8UzSjvZrs@192.168.100.153:27017,192.168.100.154:27017,192.168.100.155:27017/huatu_ztk"
     val collection = "ztk_answer_card"
@@ -32,7 +32,7 @@ object AbilityAssessment {
       .set("spark.mongodb.input.uri", inputUrl)
       .set("spark.debug.maxToStringFields", "100")
       .set("spark.mongodb.input.partitioner", "MongoSamplePartitioner")
-      .set("spark.mongodb.input.partitionerOptions.partitionSizeMB", args(3))
+      .set("spark.mongodb.input.partitionerOptions.partitionSizeMB", args(2))
       .set("spark.mongodb.keep_alive_ms", "3600000000000")
       .registerKryoClasses(Array(classOf[scala.collection.mutable.WrappedArray.ofRef[_]], classOf[AnswerCard]))
 
