@@ -27,22 +27,16 @@ object AbilityAssessment {
 
     val conf = new SparkConf()
       .setAppName("AbilityAssessment")
-      //      .setMaster("local[13]")
+//      .setMaster("local")
       .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-      .set("spark.mongodb.input.uri", inputUrl)
       .set("spark.debug.maxToStringFields", "100")
-      .set("spark.mongodb.input.partitioner", "MongoSamplePartitioner")
-      .set("spark.mongodb.input.partitionerOptions.partitionSizeMB", args(2))
-      .set("spark.mongodb.input.partitionerOptions.samplesPerPartition", args(3))
-      .set("spark.mongodb.keep_alive_ms", "3600000000000")
       .registerKryoClasses(Array(classOf[scala.collection.mutable.WrappedArray.ofRef[_]], classOf[AnswerCard]))
 
     import com.mongodb.spark.sql._
     val sparkSession = SparkSession.builder().config(conf).getOrCreate()
 
     import sparkSession.implicits._
-    // spark context
-    val sc = sparkSession.sparkContext
+
 
     // ztk_question
     /**
@@ -52,7 +46,11 @@ object AbilityAssessment {
       ReadConfig(
         Map(
           "uri" -> inputUrl.concat(".ztk_question"),
+          "partitioner" -> "MongoSamplePartitioner",
+          "partitionSizeMB" -> "1024",
+          "samplesPerPartition" -> "100000",
           "readPreference.name" -> "secondaryPreferred",
+          "keep_alive_ms" -> "500",
           "partitionKey" -> "_id")
       )).toDF() // Uses the ReadConfig
     ztk_question.createOrReplaceTempView("ztk_question")
@@ -62,6 +60,8 @@ object AbilityAssessment {
       * spark 205846
       * the mapping of the knowledge to points
       */
+    // spark context
+    val sc = sparkSession.sparkContext
     val q2p = sc.broadcast(sparkSession.sql("select _id,points from ztk_question").rdd.filter { r =>
       var flag = true
 
@@ -87,21 +87,27 @@ object AbilityAssessment {
     if (q2p.value.isEmpty) {
       sparkSession.stop()
     }
+
     // ztk_answer_card
     val ztk_answer_card = sparkSession.loadFromMongoDB(
       ReadConfig(
         Map(
           "uri" -> inputUrl.concat(".ztk_answer_card"),
-          "partitioner"-> "MongoSamplePartitioner",
+          "partitioner" -> "MongoSamplePartitioner",
           "readPreference.name" -> "secondaryPreferred",
           "partitionKey" -> "userId",
-          "maxBatchSize" -> "100000",
-          "samplesPerPartition" -> "10000"
+          "partitionSizeMB" -> "48",
+          "samplesPerPartition" -> "100000",
+          "readPreference.name" -> "secondaryPreferred"
         )
       )).toDF() // Uses the ReadConfig
     ztk_answer_card.createOrReplaceTempView("ztk_answer_card")
-    val card = sparkSession.sql("select userId,corrects,paper.questions,times,createTime from ztk_answer_card ")
-      .repartition(args(1).toInt)
+    val zac_df = sparkSession.sql("select userId,corrects,paper.questions,times,createTime from ztk_answer_card ")
+
+
+//    zac_df.rdd.saveAsObjectFile(args(0))
+    val card =  zac_df .limit(1000)
+      //      .repartition(1000)
       .rdd.filter(f =>
       !f.isNullAt(0) && !f.isNullAt(1) && !f.isNullAt(2) && f.getSeq(2).nonEmpty && !f.isNullAt(3) && !f.isNullAt(4)
     )
@@ -133,7 +139,6 @@ object AbilityAssessment {
         arr.iterator
       }
       .toDF()
-    card.persist(StorageLevel.MEMORY_AND_DISK_SER_2)
     card.show(1000)
 
     // val total_station = mongo.select("userId", "subject", "catgory", "expendTime", "createTime", "corrects", "paper.questions", "paper.modules", "StringCount")
@@ -156,7 +161,8 @@ object AbilityAssessment {
       * cumulative_time 179|
       * week_predict_score -1:0:0:0]
       */
-    predicted_score.rdd.saveAsTextFile(args(0))
+    predicted_score.rdd.saveAsTextFile("ability-assessment/result_a/")
+    //    predicted_score.rdd.saveAsTextFile(args(0))
     //      .rdd.saveAsTextFile(args(0))
   }
 
