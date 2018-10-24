@@ -97,9 +97,11 @@ object AbilityAssessment {
       )).toDF() // Uses the ReadConfig
     ztk_answer_card.createOrReplaceTempView("ztk_answer_card")
     val card = sparkSession.sql("select userId,corrects,paper.questions,times,createTime from ztk_answer_card ")
-      //      .limit(1000000)
+      .limit(1000000)
       .repartition(1000)
-
+      .rdd.filter(f =>
+      !f.isNullAt(0) && !f.isNullAt(1) && !f.isNullAt(2) && !f.isNullAt(3) && !f.isNullAt(4)
+    )
       .mapPartitions { rite =>
         var arr = new ArrayBuffer[AnswerCard]()
         val q2pMap = q2p.value
@@ -126,7 +128,7 @@ object AbilityAssessment {
           arr += answerCard
         }
         arr.iterator
-      }.filter { ac => ac.userId.isValidLong && ac.corrects.nonEmpty && ac.points.nonEmpty && ac.corrects.nonEmpty && ac.times.nonEmpty }
+      }
       .toDF()
     card.cache()
     card.show(1000)
