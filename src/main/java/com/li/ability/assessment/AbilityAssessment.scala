@@ -27,7 +27,7 @@ object AbilityAssessment {
 
     val conf = new SparkConf()
       .setAppName("AbilityAssessment")
-//      .setMaster("local")
+      //      .setMaster("local")
       .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
       .set("spark.debug.maxToStringFields", "100")
       .registerKryoClasses(Array(classOf[scala.collection.mutable.WrappedArray.ofRef[_]], classOf[AnswerCard]))
@@ -105,9 +105,9 @@ object AbilityAssessment {
     val zac_df = sparkSession.sql("select userId,corrects,paper.questions,times,createTime from ztk_answer_card ")
 
 
-//    zac_df.rdd.saveAsObjectFile(args(0))
-    val card =  zac_df .limit(1000)
-      //      .repartition(1000)
+    //    zac_df.rdd.saveAsObjectFile(args(0))
+    val card = zac_df
+      .repartition(1000)
       .rdd.filter(f =>
       !f.isNullAt(0) && !f.isNullAt(1) && !f.isNullAt(2) && f.getSeq(2).nonEmpty && !f.isNullAt(3) && !f.isNullAt(4)
     )
@@ -161,8 +161,8 @@ object AbilityAssessment {
       * cumulative_time 179|
       * week_predict_score -1:0:0:0]
       */
-    predicted_score.rdd.saveAsTextFile("ability-assessment/result_a/")
-    //    predicted_score.rdd.saveAsTextFile(args(0))
+    //    predicted_score.rdd.saveAsTextFile("ability-assessment/result_a/")
+    predicted_score.rdd.saveAsTextFile(args(0))
     //      .rdd.saveAsTextFile(args(0))
   }
 
