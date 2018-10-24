@@ -33,6 +33,7 @@ object AbilityAssessment {
       .set("spark.debug.maxToStringFields", "100")
       .set("spark.mongodb.input.partitioner", "MongoSamplePartitioner")
       .set("spark.mongodb.input.partitionerOptions.partitionSizeMB", args(2))
+      .set("spark.mongodb.input.partitionerOptions.samplesPerPartition", args(3))
       .set("spark.mongodb.keep_alive_ms", "3600000000000")
       .registerKryoClasses(Array(classOf[scala.collection.mutable.WrappedArray.ofRef[_]], classOf[AnswerCard]))
 
