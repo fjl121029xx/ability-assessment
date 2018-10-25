@@ -27,16 +27,19 @@ object AbilityAssessment {
 
     val conf = new SparkConf()
       .setAppName("AbilityAssessment")
-      //      .setMaster("local")
+      //      .setMaster("local[3]")
       .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+      .set("spark.mongodb.input.readPreference.name", "secondaryPreferred")
+      .set("spark.mongodb.input.partitioner", "MongoSamplePartitioner")
+      .set("spark.mongodb.input.partitionKey", "_id")
+      .set("spark.mongodb.input.partitionSizeMB", "5120")
+      .set("spark.mongodb.input.samplesPerPartition", "5000000")
       .set("spark.debug.maxToStringFields", "100")
       .registerKryoClasses(Array(classOf[scala.collection.mutable.WrappedArray.ofRef[_]], classOf[AnswerCard]))
 
     import com.mongodb.spark.sql._
     val sparkSession = SparkSession.builder().config(conf).getOrCreate()
-
     import sparkSession.implicits._
-
 
     // ztk_question
     /**
@@ -46,13 +49,10 @@ object AbilityAssessment {
       ReadConfig(
         Map(
           "uri" -> inputUrl.concat(".ztk_question"),
-          "partitioner" -> "MongoSamplePartitioner",
-          "partitionSizeMB" -> "1024",
-          "samplesPerPartition" -> "100000",
-          "readPreference.name" -> "secondaryPreferred",
-          "keep_alive_ms" -> "500",
-          "partitionKey" -> "_id")
+          "maxBatchSize" -> "1000000",
+          "keep_alive_ms" -> "500")
       )).toDF() // Uses the ReadConfig
+    ztk_question.printSchema()
     ztk_question.createOrReplaceTempView("ztk_question")
     //    val q2p = sc.broadcast(map.collectAsMap())
     /**
@@ -62,24 +62,21 @@ object AbilityAssessment {
       */
     // spark context
     val sc = sparkSession.sparkContext
+    sc.setCheckpointDir("hdfs://huatu68/huatu/ability-assessment/checkpoint_dir/".concat(args(0)))
     val q2p = sc.broadcast(sparkSession.sql("select _id,points from ztk_question").rdd.filter { r =>
       var flag = true
-
       flag = !r.isNullAt(0) && !r.isNullAt(1) && r.getSeq(1).nonEmpty
-      if (flag) {
-        flag = r.get(0).getClass.getName match {
-          case "java.lang.Double" => false
-          case _ => true
-        }
-      }
+      //      if (flag) {
+      //        flag = r.get(0).getClass.getName match {
+      //          case "java.lang.Double" => false
+      //          case _ => true
+      //        }
+      //      }
       flag
     }.map {
       r =>
-        val _id: Int = r.getInt(0)
-        val pid: Int = r.getSeq(1).head
-        //        if (_id == 55309) {b
-        //          println(_id + "___" + pid)
-        //        }
+        val _id: Int = r.get(0).asInstanceOf[Number].intValue()
+        val pid = r.getSeq(1).head.asInstanceOf[Double].intValue()
         (_id, pid)
     }.collectAsMap())
     //    Thread.sleep(5000)
@@ -93,21 +90,22 @@ object AbilityAssessment {
       ReadConfig(
         Map(
           "uri" -> inputUrl.concat(".ztk_answer_card"),
-          "partitioner" -> "MongoSamplePartitioner",
-          "readPreference.name" -> "secondaryPreferred",
-          "partitionKey" -> "userId",
-          "partitionSizeMB" -> "48",
-          "samplesPerPartition" -> "100000",
-          "readPreference.name" -> "secondaryPreferred"
+          "partitionSizeMB" -> "5120",
+          "maxBatchSize" -> "1000000",
+          "samplesPerPartition" -> "5000000"
         )
       )).toDF() // Uses the ReadConfig
     ztk_answer_card.createOrReplaceTempView("ztk_answer_card")
-    val zac_df = sparkSession.sql("select userId,corrects,paper.questions,times,createTime from ztk_answer_card ")
+    val zac_df = sparkSession.sql("select userId,corrects,paper.questions,times,createTime from ztk_answer_card")
 
-
+    zac_df.show(2000)
+    zac_df.checkpoint()
+    //    zac_df.write.save("ability-assessment/result_b/")
+    //    zac_df.write.save(args(1))
     //    zac_df.rdd.saveAsObjectFile(args(0))
     val card = zac_df
-      .repartition(1000)
+      //      .limit(1000)
+      //      .repartition(1000)
       .rdd.filter(f =>
       !f.isNullAt(0) && !f.isNullAt(1) && !f.isNullAt(2) && f.getSeq(2).nonEmpty && !f.isNullAt(3) && !f.isNullAt(4)
     )
@@ -155,14 +153,16 @@ object AbilityAssessment {
       * 642:0:93:0_
       * 435:7:152:72_
       * 392:3:68:67_
+      *
       * 482:0:46:1_
       * 754:4:45:39|
       * do_exercise_num 401|
       * cumulative_time 179|
       * week_predict_score -1:0:0:0]
       */
+    predicted_score.show(1000)
     //    predicted_score.rdd.saveAsTextFile("ability-assessment/result_a/")
-    predicted_score.rdd.saveAsTextFile(args(0))
+    predicted_score.rdd.saveAsTextFile("hdfs://huatu68/huatu/ability-assessment/result/".concat(args(0)))
     //      .rdd.saveAsTextFile(args(0))
   }
 
