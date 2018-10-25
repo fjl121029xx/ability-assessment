@@ -62,7 +62,7 @@ object AbilityAssessment {
       */
     // spark context
     val sc = sparkSession.sparkContext
-    sc.setCheckpointDir("hdfs://huatu68/huatu/ability-assessment/checkpoint_dir/".concat(args(0)))
+    //    sc.setCheckpointDir("hdfs://huatu68/huatu/ability-assessment/checkpoint_dir/".concat(args(0)))
     val q2p = sc.broadcast(sparkSession.sql("select _id,points from ztk_question").rdd.filter { r =>
       var flag = true
       flag = !r.isNullAt(0) && !r.isNullAt(1) && r.getSeq(1).nonEmpty
@@ -99,7 +99,7 @@ object AbilityAssessment {
     val zac_df = sparkSession.sql("select userId,corrects,paper.questions,times,createTime from ztk_answer_card")
 
     zac_df.show(2000)
-    zac_df.checkpoint()
+    //    zac_df.checkpoint()
     //    zac_df.write.save("ability-assessment/result_b/")
     //    zac_df.write.save(args(1))
     //    zac_df.rdd.saveAsObjectFile(args(0))
@@ -131,8 +131,15 @@ object AbilityAssessment {
             points += pid
           }
           println(ac)
-          var answerCard = AnswerCard(ac.get(0).asInstanceOf[Long].longValue(), ac.getSeq[Int](1), questions, ac.getSeq[Int](3), points, ac.get(4).asInstanceOf[Long].longValue())
-          arr += answerCard
+
+          arr += AnswerCard(
+            ac.get(0).asInstanceOf[Long].longValue(),
+            ac.getSeq[Int](1),
+            questions,
+            ac.getSeq[Int](3),
+            points,
+            ac.get(4).asInstanceOf[Long].longValue())
+
         }
         arr.iterator
       }
@@ -160,7 +167,7 @@ object AbilityAssessment {
       * cumulative_time 179|
       * week_predict_score -1:0:0:0]
       */
-    predicted_score.show(1000)
+    predicted_score.show(3000)
     //    predicted_score.rdd.saveAsTextFile("ability-assessment/result_a/")
     predicted_score.rdd.saveAsTextFile("hdfs://huatu68/huatu/ability-assessment/result/".concat(args(0)))
     //      .rdd.saveAsTextFile(args(0))
