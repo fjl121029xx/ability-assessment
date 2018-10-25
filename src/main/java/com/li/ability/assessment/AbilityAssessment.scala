@@ -105,7 +105,7 @@ object AbilityAssessment {
     //    zac_df.rdd.saveAsObjectFile(args(0))
     val card = zac_df
       //      .limit(1000)
-      //      .repartition(1000)
+      .repartition(1000)
       .rdd.filter(f =>
       !f.isNullAt(0) && !f.isNullAt(1) && !f.isNullAt(2) && f.getSeq(2).nonEmpty && !f.isNullAt(3) && !f.isNullAt(4)
     )
@@ -130,8 +130,8 @@ object AbilityAssessment {
             val pid: Int = q2pMap.getOrElse(qid, 0)
             points += pid
           }
-
-          var answerCard = AnswerCard(ac.getLong(0), ac.getSeq(1), questions, ac.getSeq(3), points, ac.getLong(4))
+          println(ac)
+          var answerCard = AnswerCard(ac.get(0).asInstanceOf[Long].longValue(), ac.getSeq[Int](1), questions, ac.getSeq[Int](3), points, ac.get(4).asInstanceOf[Long].longValue())
           arr += answerCard
         }
         arr.iterator
