@@ -44,7 +44,7 @@ object AbilityAssessment {
 
     val conf = new SparkConf()
       .setAppName("AbilityAssessment")
-//      .setMaster("local[3]")
+      //      .setMaster("local[3]")
       .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
       .set("spark.mongodb.input.readPreference.name", "secondaryPreferred")
       .set("spark.mongodb.input.partitioner", "MongoSamplePartitioner")
@@ -149,13 +149,13 @@ object AbilityAssessment {
           }
 
           arr += AnswerCard(
-            ac.get(0).asInstanceOf[Long].longValue(),//userId
-            ac.getSeq[Int](1),//corrects
-            questions,//questions
-            ac.getSeq[Int](3),//times
-            points,//points
-            ac.get(4).asInstanceOf[Long].longValue(),//createTime
-            ac.get(5).asInstanceOf[Int].intValue())//subject
+            ac.get(0).asInstanceOf[Long].longValue(), //userId
+            ac.getSeq[Int](1), //corrects
+            questions, //questions
+            ac.getSeq[Int](3), //times
+            points, //points
+            ac.get(4).asInstanceOf[Long].longValue(), //createTime
+            ac.get(5).asInstanceOf[Int].intValue()) //subject
         }
         arr.iterator
       }
@@ -169,6 +169,21 @@ object AbilityAssessment {
 
     predicted_score.show(3000)
     //    predicted_score.rdd.saveAsTextFile("ability-assessment/result_a/")
+    // 累加器
+    val ts_userCount_x = sc.longAccumulator("ts_userCount_x")
+    val ts_userCount_g = sc.longAccumulator("ts_userCount_g")
+    val ts_userCount_z = sc.longAccumulator("ts_userCount_z")
+
+    val ts_questionCount_x = sc.longAccumulator("ts_questionCount_x")
+    val ts_questionCount_g = sc.longAccumulator("ts_questionCount_g")
+    val ts_questionCount_z = sc.longAccumulator("ts_questionCount_z")
+
+    val week_userCount_x = sc.longAccumulator("userCount")
+    val week_userCount_g = sc.longAccumulator("userCount")
+    val week_userCount_z = sc.longAccumulator("userCount")
+
+
+    val week_questionCount = sc.longAccumulator("questionCount")
 
     val predicted_score_rdd = predicted_score.rdd
 
@@ -181,6 +196,18 @@ object AbilityAssessment {
           val userId = n.get(0).asInstanceOf[Long].longValue()
           val predictedScore = n.get(1).asInstanceOf[Seq[String]].seq
           val subject = n.get(2).asInstanceOf[Int].intValue()
+
+          if (subject == 1) {
+            ts_userCount_x.add(1)
+            ts_questionCount_x.add(predictedScore(1).toLong)
+          } else if (subject == 2) {
+            ts_userCount_g.add(1)
+            ts_questionCount_g.add(predictedScore(1).toLong)
+          } else if (subject == 3) {
+            ts_userCount_z(1)
+            ts_questionCount_z.add(predictedScore(1).toLong)
+
+          }
 
           arr += TS_AbilityAssessment(
             userId, //userId
@@ -216,6 +243,14 @@ object AbilityAssessment {
           val userId = n.get(0).asInstanceOf[Long].longValue()
           val predictedScore = n.get(1).asInstanceOf[Seq[String]].seq
           val subject = n.get(2).asInstanceOf[Int].intValue()
+
+          if (subject == 1) {
+            week_userCount_x.add(1)
+          } else if (subject == 2) {
+            week_userCount_g.add(1)
+          } else if (subject == 3) {
+            week_userCount_z(1)
+          }
 
           arr += Week_AbilityAssessment(
             userId, //userId
