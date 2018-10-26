@@ -204,7 +204,7 @@ object AbilityAssessment {
             ts_userCount_g.add(1)
             ts_questionCount_g.add(predictedScore(1).toLong)
           } else if (subject == 3) {
-            ts_userCount_z(1)
+            ts_userCount_z.add(1)
             ts_questionCount_z.add(predictedScore(1).toLong)
 
           }
@@ -249,7 +249,7 @@ object AbilityAssessment {
           } else if (subject == 2) {
             week_userCount_g.add(1)
           } else if (subject == 3) {
-            week_userCount_z(1)
+            week_userCount_z.add(1)
           }
 
           arr += Week_AbilityAssessment(

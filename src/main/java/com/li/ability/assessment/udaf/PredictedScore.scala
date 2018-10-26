@@ -175,16 +175,16 @@ class PredictedScore extends UserDefinedAggregateFunction {
     //total_station_predict_score
     aggreBuffer.update(0, total_station_predicted_score)
 
-    val questions = row.getSeq[Int](1)
+    val questions = row.get(1).asInstanceOf[Seq[Int]].seq
     val questionSet = Set[Int]()
-    aggreBuffer.getAs[Seq[Int]](1).foreach(questionSet += _)
+    aggreBuffer.get(1).asInstanceOf[Seq[Int]].seq.foreach(questionSet += _)
     questions.foreach(f =>
       questionSet += f
     )
     //do_exercise_num
     aggreBuffer.update(1, questionSet.toSeq)
     //cumulative_time
-    aggreBuffer.update(2, row.get(2).asInstanceOf[Int].longValue() + aggreBuffer.get(2).asInstanceOf[Int].longValue())
+    aggreBuffer.update(2, row.get(2).asInstanceOf[Int].intValue() + aggreBuffer.get(2).asInstanceOf[Int].intValue())
 
 
     val week_predicted_score = PredictedScore.mergeMap(aggreBuffer.getAs[String](3), row.getAs[String](3)).mkString("_")
@@ -213,7 +213,7 @@ class PredictedScore extends UserDefinedAggregateFunction {
     val do_exercise_num = buffer.getAs[collection.mutable.Set[Int]](1).size
     val cumulative_time = buffer.get(2).asInstanceOf[Int].intValue()
     val week_predict_score = buffer.getAs[String](3)
-    val do_exercise_day = buffer.getAs[collection.mutable.Set[Int]](5).size
+    val do_exercise_day = buffer.getAs[collection.mutable.Set[String]](5).size
 
     Array(
       total_station_predict_score.replaceAll("-1:0:0:0_", ""),
