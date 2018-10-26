@@ -29,7 +29,7 @@ class PredictedScore extends UserDefinedAggregateFunction {
     StructType(Array(
       StructField("total_station_predict_score", StringType, true),
       StructField("do_exercise_num", ArrayType(IntegerType), true),
-      StructField("cumulative_time", LongType, true),
+      StructField("cumulative_time", IntegerType, true),
       StructField("week_predict_score", StringType, true),
       StructField("createTime", LongType, true)
     ))
@@ -49,7 +49,7 @@ class PredictedScore extends UserDefinedAggregateFunction {
     // do_exercise_num
     buffer.update(1, Array())
     // cumulative_time
-    buffer.update(2, 0L)
+    buffer.update(2, 0)
     // week_predict_score
     buffer.update(3, "-1:0:0:0_-1:0:0:0")
     // createTime
@@ -130,9 +130,9 @@ class PredictedScore extends UserDefinedAggregateFunction {
 
 
     // 获得输入的做题时间
-    var timeBuffer = buffer.get(2).asInstanceOf[Long].longValue()
+    var timeBuffer = buffer.get(2).asInstanceOf[Int].intValue()
     input.getSeq[Int](2).toArray.foreach(f =>
-      timeBuffer += f
+      timeBuffer += f.intValue()
     )
     buffer.update(2, timeBuffer)
 
@@ -169,7 +169,7 @@ class PredictedScore extends UserDefinedAggregateFunction {
     )
     aggreBuffer.update(1, questionSet.toSeq)
 
-    aggreBuffer.update(2, row.get(2).asInstanceOf[Long].longValue() + aggreBuffer.get(2).asInstanceOf[Long].longValue())
+    aggreBuffer.update(2, row.get(2).asInstanceOf[Int].longValue() + aggreBuffer.get(2).asInstanceOf[Int].longValue())
 
 
     val week_predicted_score = PredictedScore.mergeMap(aggreBuffer.getAs[String](3), row.getAs[String](3)).mkString("_")
@@ -185,14 +185,14 @@ class PredictedScore extends UserDefinedAggregateFunction {
 
     val total_station_predict_score = buffer.getAs[String](0)
     val do_exercise_num = buffer.getAs[collection.mutable.Set[Int]](1).size
-    val cumulative_time = buffer.get(2).asInstanceOf[Long].longValue()
+    val cumulative_time = buffer.get(2).asInstanceOf[Int].intValue()
     val week_predict_score = buffer.getAs[String](3)
 
     Array(
-      total_station_predict_score.replaceAll("-1:0:0:0_",""),
-      do_exercise_num,
-      cumulative_time,
-      week_predict_score
+      total_station_predict_score.replaceAll("-1:0:0:0_", ""),
+      do_exercise_num.toString,
+      cumulative_time.toString,
+      week_predict_score.toString
     )
   }
 }
@@ -208,7 +208,7 @@ object PredictedScore {
 
     total_station_predict_score.split("_").foreach(f => {
       val arr = f.split(":")
-      mutmap += (arr(0).toInt -> (arr(1).toInt, arr(2).toInt, arr(3).toInt))
+      mutmap += (arr(0).asInstanceOf[Int].intValue() -> (arr(1).asInstanceOf[Int].intValue(), arr(2).asInstanceOf[Int].intValue(), arr(3).asInstanceOf[Int].intValue()))
     })
 
     mutmap
@@ -262,8 +262,10 @@ object PredictedScore {
     //    jarSet += "Tom"
     //    println(jarSet)
 
-    println(TimeUtils.getWeekendTimeStamp()) //1540137600
-    println(TimeUtils.getWeekStartTimeStamp()) //1540569600
+    val a: Int = 1
+    val b: Long = 2L
+    println(a + b)
+
   }
 
   //  def main(args: Array[String]): Unit = {
