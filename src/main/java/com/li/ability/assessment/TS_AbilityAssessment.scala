@@ -148,23 +148,14 @@ object AbilityAssessment {
             points += pid
           }
 
-          /**
-            * userId: Long,
-            * corrects: Seq[Int],
-            * questions: Seq[Int],
-            * times: Seq[Int],
-            * points: Seq[Int],
-            * createTime: Long,
-            * subject: Int
-            */
           arr += AnswerCard(
-            ac.get(0).asInstanceOf[Long].longValue(),
-            ac.getSeq[Int](1),
-            questions,
-            ac.getSeq[Int](3),
-            points,
-            ac.get(4).asInstanceOf[Long].longValue(),
-            ac.get(5).asInstanceOf[Int].intValue())
+            ac.get(0).asInstanceOf[Long].longValue(),//userId
+            ac.getSeq[Int](1),//corrects
+            questions,//questions
+            ac.getSeq[Int](3),//times
+            points,//points
+            ac.get(4).asInstanceOf[Long].longValue(),//createTime
+            ac.get(5).asInstanceOf[Int].intValue())//subject
         }
         arr.iterator
       }
