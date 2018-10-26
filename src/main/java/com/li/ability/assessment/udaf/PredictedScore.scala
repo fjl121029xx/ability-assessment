@@ -115,6 +115,7 @@ class PredictedScore extends UserDefinedAggregateFunction {
       .replaceAll("->\\(", ":")
       .replaceAll("\\)", "")
       .replaceAll(",", ":")
+    //total_station_predict_score
     buffer.update(
       0, upd
     )
@@ -127,6 +128,7 @@ class PredictedScore extends UserDefinedAggregateFunction {
     questions.foreach(f =>
       questionSet += f
     )
+    //do_exercise_num
     buffer.update(1, questionSet.toSeq)
 
 
@@ -135,8 +137,10 @@ class PredictedScore extends UserDefinedAggregateFunction {
     input.getSeq[Int](2).toArray.foreach(f =>
       timeBuffer += f.intValue()
     )
+    //cumulative_time
     buffer.update(2, timeBuffer)
 
+    //createTime
     val createTime = input.get(4).asInstanceOf[Long].longValue()
 
     val week_start: Long = TimeUtils.getWeekStartTimeStamp()
@@ -145,6 +149,7 @@ class PredictedScore extends UserDefinedAggregateFunction {
       // mutmap 是本次输入
       val week_predicted_score = PredictedScore.weekPredictedScore(mutmap, PredictedScore.getTSPredictScore2Map(buffer.getAs[String](3)))
       println("week_predicted_score -> " + week_predicted_score)
+      //week_predict_score
       buffer.update(3, week_predicted_score)
     } else {
       buffer.update(3, buffer.getAs[String](3))
@@ -153,7 +158,7 @@ class PredictedScore extends UserDefinedAggregateFunction {
     val daySet = Set[String]()
     buffer.getAs[Seq[String]](5).foreach(daySet += _)
     daySet += TimeUtils.convertTimeStamp2DateStr(createTime, "yyyy-MM-dd")
-
+    //do_exercise_day
     buffer.update(5, daySet.toSeq)
   }
 
@@ -167,19 +172,18 @@ class PredictedScore extends UserDefinedAggregateFunction {
       .replaceAll("->\\(", ":")
       .replaceAll("\\)", "")
       .replaceAll(",", ":")
-
+    //total_station_predict_score
     aggreBuffer.update(0, total_station_predicted_score)
 
-    // 本次
     val questions = row.getSeq[Int](1)
-    // 合并
     val questionSet = Set[Int]()
     aggreBuffer.getAs[Seq[Int]](1).foreach(questionSet += _)
     questions.foreach(f =>
       questionSet += f
     )
+    //do_exercise_num
     aggreBuffer.update(1, questionSet.toSeq)
-
+    //cumulative_time
     aggreBuffer.update(2, row.get(2).asInstanceOf[Int].longValue() + aggreBuffer.get(2).asInstanceOf[Int].longValue())
 
 
@@ -188,18 +192,17 @@ class PredictedScore extends UserDefinedAggregateFunction {
       .replaceAll("->\\(", ":")
       .replaceAll("\\)", "")
       .replaceAll(",", ":")
-
+    //week_predict_score
     aggreBuffer.update(3, week_predicted_score)
 
 
-    // 本次
     val days = row.getSeq[String](5)
-    // 合并
     val daySet = Set[String]()
     aggreBuffer.getAs[Seq[String]](5).foreach(daySet += _)
     days.foreach(f =>
       daySet += f
     )
+    //do_exercise_day
     aggreBuffer.update(5, daySet.toSeq)
 
   }
