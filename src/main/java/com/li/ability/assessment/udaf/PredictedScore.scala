@@ -149,7 +149,7 @@ class PredictedScore extends UserDefinedAggregateFunction {
     if (week_start <= createTime && createTime < week_end) {
       // mutmap 是本次输入
       val week_predicted_score = PredictedScore.weekPredictedScore(mutmap, PredictedScore.getTSPredictScore2Map(buffer.getAs[String](3)))
-      println("week_predicted_score -> " + week_predicted_score)
+      println("week_predicted_score ->   " + week_predicted_score)
       //week_predict_score
       buffer.update(3, week_predicted_score)
     } else {

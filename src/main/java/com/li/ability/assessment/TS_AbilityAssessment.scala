@@ -5,6 +5,7 @@ import com.li.ability.assessment.udaf.PredictedScore
 import com.li.ability.assessment.udaf.PredictedScore.getTSPredictScore2Map
 import org.apache.spark.{SparkConf, SparkContext}
 import com.mongodb.spark.config.ReadConfig
+import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.storage.StorageLevel
 
@@ -231,7 +232,7 @@ object AbilityAssessment {
       "cumulative_time," +
       "do_exercise_day," +
       "subject," +
-      "Row_Number() OVER(partition by subject order by userId) rank " +
+      "Row_Number() OVER(partition by subject order by total_station_predict_score) rank " +
       "from ts_predicted_score_df")
 
     ts.show(5000)
@@ -268,10 +269,22 @@ object AbilityAssessment {
       "week_grade," +
       "week_predict_score," +
       "subject," +
-      "Row_Number() OVER(partition by subject order by userId) rank " +
+      "Row_Number() OVER(partition by subject order by week_predict_score) rank " +
       "from week_predicted_score_df")
     week.show(5000)
 
+
+
+    val hbaseConf = HBaseConfiguration.create()
+    //            conf.set("hbase.zookeeper.quorum", "192.168.100.29,192.168.100.27,192.168.100.28")
+    hbaseConf.set("hbase.zookeeper.quorum", "192.168.100.68,192.168.100.70,192.168.100.72")
+    hbaseConf.set("hbase.zookeeper.property.clientPort", "2181")
+    //      conf.set("hbase.master", "192.168.100.2:60010")
+    hbaseConf.set("hbase.rootdir", "/hbase")
+    hbaseConf.set("hbase.client.retries.number", "3")
+    hbaseConf.set("hbase.rpc.timeout", "2000")
+    hbaseConf.set("hbase.client.operation.timeout", "30")
+    hbaseConf.set("hbase.client.scanner.timeout.period", "100")
     //    aa.take(1000).foreach(println)
     //    aa.saveAsTextFile("hdfs://huatu68/huatu/ability-assessment/result/".concat(args(0)))
     //      .rdd.saveAsTextFile(args(0))
