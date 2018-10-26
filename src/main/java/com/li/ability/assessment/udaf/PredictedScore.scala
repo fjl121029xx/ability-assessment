@@ -10,8 +10,6 @@ class PredictedScore extends UserDefinedAggregateFunction {
 
   import org.apache.spark.sql.types._
 
-  private val week_start: Long = TimeUtils.getWeekStartTimeStamp()
-  private val week_end: Long = TimeUtils.getWeekendTimeStamp()
 
   override def inputSchema: StructType = {
 
@@ -31,7 +29,8 @@ class PredictedScore extends UserDefinedAggregateFunction {
       StructField("do_exercise_num", ArrayType(IntegerType), true),
       StructField("cumulative_time", IntegerType, true),
       StructField("week_predict_score", StringType, true),
-      StructField("createTime", LongType, true)
+      StructField("createTime", LongType, true),
+      StructField("do_exercise_day", ArrayType(StringType), true)
     ))
   }
 
@@ -54,6 +53,8 @@ class PredictedScore extends UserDefinedAggregateFunction {
     buffer.update(3, "-1:0:0:0_-1:0:0:0")
     // createTime
     buffer.update(4, 0L)
+    // do_exercise_day
+    buffer.update(5, Array())
   }
 
 
@@ -118,7 +119,7 @@ class PredictedScore extends UserDefinedAggregateFunction {
       0, upd
     )
 
-
+    // 做题数量
     val questions = input.getSeq[Int](1)
     val questionSet = Set[Int]()
     buffer.getAs[Seq[Int]](1).foreach(questionSet += _)
@@ -137,13 +138,23 @@ class PredictedScore extends UserDefinedAggregateFunction {
     buffer.update(2, timeBuffer)
 
     val createTime = input.get(4).asInstanceOf[Long].longValue()
+
+    val week_start: Long = TimeUtils.getWeekStartTimeStamp()
+    val week_end: Long = TimeUtils.getWeekendTimeStamp()
     if (week_start <= createTime && createTime < week_end) {
       // mutmap 是本次输入
       val week_predicted_score = PredictedScore.weekPredictedScore(mutmap, PredictedScore.getTSPredictScore2Map(buffer.getAs[String](3)))
+      println("week_predicted_score -> " + week_predicted_score)
       buffer.update(3, week_predicted_score)
     } else {
       buffer.update(3, buffer.getAs[String](3))
     }
+
+    val daySet = Set[String]()
+    buffer.getAs[Seq[String]](5).foreach(daySet += _)
+    daySet += TimeUtils.convertTimeStamp2DateStr(createTime, "yyyy-MM-dd")
+
+    buffer.update(5, daySet.toSeq)
   }
 
 
@@ -179,6 +190,18 @@ class PredictedScore extends UserDefinedAggregateFunction {
       .replaceAll(",", ":")
 
     aggreBuffer.update(3, week_predicted_score)
+
+
+    // 本次
+    val days = row.getSeq[String](5)
+    // 合并
+    val daySet = Set[String]()
+    aggreBuffer.getAs[Seq[String]](5).foreach(daySet += _)
+    days.foreach(f =>
+      daySet += f
+    )
+    aggreBuffer.update(5, daySet.toSeq)
+
   }
 
   override def evaluate(buffer: Row): Any = {
@@ -187,17 +210,21 @@ class PredictedScore extends UserDefinedAggregateFunction {
     val do_exercise_num = buffer.getAs[collection.mutable.Set[Int]](1).size
     val cumulative_time = buffer.get(2).asInstanceOf[Int].intValue()
     val week_predict_score = buffer.getAs[String](3)
+    val do_exercise_day = buffer.getAs[collection.mutable.Set[Int]](5).size
 
     Array(
       total_station_predict_score.replaceAll("-1:0:0:0_", ""),
       do_exercise_num.toString,
       cumulative_time.toString,
-      week_predict_score.toString
+      week_predict_score.toString,
+      do_exercise_day.toString
     )
   }
 }
 
 object PredictedScore {
+
+
   /**
     * -1:0:0_-1:0:0
     */
@@ -207,7 +234,7 @@ object PredictedScore {
     val total_station_predict_score = str
 
     total_station_predict_score.split("_").foreach(f => {
-      val arr = f.split(":")
+      val arr = f.split(":").map(Integer.parseInt(_))
       mutmap += (arr(0).asInstanceOf[Int].intValue() -> (arr(1).asInstanceOf[Int].intValue(), arr(2).asInstanceOf[Int].intValue(), arr(3).asInstanceOf[Int].intValue()))
     })
 
@@ -254,18 +281,86 @@ object PredictedScore {
       .replaceAll(",", ":")
   }
 
+  /**
+    *
+    * @param grade
+    * @param _type
+    * @return
+    */
+  def getScore(grade: String, _type: Int): Double = {
+    var defaultScore = 0.0
+    var map = getTSPredictScore2Map(grade)
+    _type match {
+      case 1 => {
+        var score: Double = 0.0
+        var changshi = map.getOrElse(392, (0, 0, 0))._1 * 1.0 / map.getOrElse(392, (0, 1, 0))._2 * 1.0
+        var yanyu = map.getOrElse(435, (0, 0, 0))._1 * 1.0 / map.getOrElse(435, (0, 1, 0))._2 * 1.0
+        var shuliang = map.getOrElse(482, (0, 0, 0))._1 * 1.0 / map.getOrElse(482, (0, 1, 0))._2 * 1.0
+        var panduan = map.getOrElse(642, (0, 0, 0))._1 * 1.0 / map.getOrElse(642, (0, 1, 0))._2 * 1.0
+        var ziliao = map.getOrElse(754, (0, 0, 0))._1 * 1.0 / map.getOrElse(754, (0, 1, 0))._2 * 1.0
+
+        score += (25.0 / 135.0) * changshi * 100 +
+          (40.0 / 135.0) * yanyu * 100 +
+          (15.0 / 135.0) * shuliang * 100 +
+          (40.0 / 135.0) * panduan * 100 +
+          (20.0 / 135.0) * ziliao * 100
+        defaultScore = score
+      }
+      case 2 => {
+        var score: Double = 0.0
+
+        var correctNum = map.getOrElse(3125, (0, 0, 0))._1 * 1.0 +
+          map.getOrElse(3195, (0, 0, 0))._1 * 1.0 +
+          map.getOrElse(3250, (0, 0, 0))._1 * 1.0 +
+          map.getOrElse(3280, (0, 0, 0))._1 * 1.0 +
+          map.getOrElse(3298, (0, 0, 0))._1 * 1.0 +
+          map.getOrElse(3332, (0, 0, 0))._1 * 1.0
+
+        var Num = map.getOrElse(3125, (0, 1, 0))._2 * 1.0 +
+          map.getOrElse(3195, (0, 1, 0))._2 * 1.0 +
+          map.getOrElse(3250, (0, 1, 0))._2 * 1.0 +
+          map.getOrElse(3280, (0, 1, 0))._2 * 1.0 +
+          map.getOrElse(3298, (0, 1, 0))._2 * 1.0 +
+          map.getOrElse(3332, (0, 1, 0))._2 * 1.0
+
+        score += correctNum / Num
+        defaultScore = score * 100
+      }
+      case 3 => {
+        var score: Double = 0.0
+
+        var correctNum = map.getOrElse(36667, (0, 0, 0))._1 * 1.0 +
+          map.getOrElse(36710, (0, 0, 0))._1 * 1.0 +
+          map.getOrElse(36735, (0, 0, 0))._1 * 1.0 +
+          map.getOrElse(36748, (0, 0, 0))._1 * 1.0 +
+          map.getOrElse(36789, (0, 0, 0))._1 * 1.0 +
+          map.getOrElse(36846, (0, 0, 0))._1 * 1.0 +
+          map.getOrElse(36831, (0, 0, 0))._1 * 1.0
+
+        var Num = map.getOrElse(36667, (0, 1, 0))._2 * 1.0 +
+          map.getOrElse(36710, (0, 1, 0))._2 * 1.0 +
+          map.getOrElse(36735, (0, 1, 0))._2 * 1.0 +
+          map.getOrElse(36748, (0, 1, 0))._2 * 1.0 +
+          map.getOrElse(36789, (0, 1, 0))._2 * 1.0 +
+          map.getOrElse(36846, (0, 1, 0))._2 * 1.0 +
+          map.getOrElse(36831, (0, 1, 0))._2 * 1.0
+
+        score += correctNum / Num
+        defaultScore = score * 100
+      }
+      case _ => {
+        defaultScore
+      }
+    }
+
+    defaultScore
+  }
+
   def main(args: Array[String]): Unit = {
 
-    //      val str = getTSPredictScore("total_station_predict_score=-1:0:0_-1:0:0|")
-    //  println(str)
-    //    var jarSet = Set("Tom", "Jerry")
-    //    jarSet += "Tom"
-    //    println(jarSet)
-
-    val a: Int = 1
-    val b: Long = 2L
-    println(a + b)
-
+    //    println(getScore("3125:34:79:1805_3280:9:24:552_3298:5:23:402_3250:3:15:324_642:18:88:3580_435:35:117:4941_3195:2:12:389_3332:6:26:486_392:58:159:6079_482:7:34:1422_754:11:72:4198_0:0:2:92",
+    //      2))
+    println(TimeUtils.getWeekStartTimeStamp())
   }
 
   //  def main(args: Array[String]): Unit = {

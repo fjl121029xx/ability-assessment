@@ -2,6 +2,7 @@ package com.li.ability.assessment
 
 
 import com.li.ability.assessment.udaf.PredictedScore
+import com.li.ability.assessment.udaf.PredictedScore.getTSPredictScore2Map
 import org.apache.spark.{SparkConf, SparkContext}
 import com.mongodb.spark.config.ReadConfig
 import org.apache.spark.sql.SparkSession
@@ -15,7 +16,23 @@ case class AnswerCard(userId: Long,
                       questions: Seq[Int],
                       times: Seq[Int],
                       points: Seq[Int],
-                      createTime: Long)
+                      createTime: Long,
+                      subject: Int)
+
+case class TS_AbilityAssessment(userId: Long,
+                                total_station_grade: Double,
+                                total_station_predict_score: String,
+                                do_exercise_num: Long,
+                                cumulative_time: Long,
+                                do_exercise_day: Long,
+                                subject: Int
+                               )
+
+case class Week_AbilityAssessment(userId: Long,
+                                  week_grade: Double,
+                                  week_predict_score: String,
+                                  subject: Int
+                                 )
 
 object AbilityAssessment {
 
@@ -27,7 +44,7 @@ object AbilityAssessment {
 
     val conf = new SparkConf()
       .setAppName("AbilityAssessment")
-      //      .setMaster("local[3]")
+      .setMaster("local[3]")
       .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
       .set("spark.mongodb.input.readPreference.name", "secondaryPreferred")
       .set("spark.mongodb.input.partitioner", "MongoSamplePartitioner")
@@ -96,7 +113,7 @@ object AbilityAssessment {
         )
       )).toDF() // Uses the ReadConfig
     ztk_answer_card.createOrReplaceTempView("ztk_answer_card")
-    val zac_df = sparkSession.sql("select userId,corrects,paper.questions,times,createTime from ztk_answer_card")
+    val zac_df = sparkSession.sql("select userId,corrects,paper.questions,times,createTime,subject from ztk_answer_card")
 
     zac_df.show(2000)
     //    zac_df.checkpoint()
@@ -104,15 +121,15 @@ object AbilityAssessment {
     //    zac_df.write.save(args(1))
     //    zac_df.rdd.saveAsObjectFile(args(0))
     val card = zac_df
-      //      .limit(1000)
+      //            .limit(1000)
       .repartition(1000)
       .rdd.filter(f =>
-      !f.isNullAt(0) && !f.isNullAt(1) && !f.isNullAt(2) && f.getSeq(2).nonEmpty && !f.isNullAt(3) && !f.isNullAt(4)
+      !f.isNullAt(0) && !f.isNullAt(1) && !f.isNullAt(2) && f.getSeq(2).nonEmpty && !f.isNullAt(3) && !f.isNullAt(4) && !f.isNullAt(5)
     )
       .mapPartitions { rite =>
         var arr = new ArrayBuffer[AnswerCard]()
         val q2pMap = q2p.value
-        println(q2pMap.size)
+
         while (rite.hasNext) {
           // answer card row
           val ac = rite.next()
@@ -130,16 +147,24 @@ object AbilityAssessment {
             val pid: Int = q2pMap.getOrElse(qid, 0)
             points += pid
           }
-          println(ac)
 
+          /**
+            * userId: Long,
+            * corrects: Seq[Int],
+            * questions: Seq[Int],
+            * times: Seq[Int],
+            * points: Seq[Int],
+            * createTime: Long,
+            * subject: Int
+            */
           arr += AnswerCard(
             ac.get(0).asInstanceOf[Long].longValue(),
             ac.getSeq[Int](1),
             questions,
             ac.getSeq[Int](3),
             points,
-            ac.get(4).asInstanceOf[Long].longValue())
-
+            ac.get(4).asInstanceOf[Long].longValue(),
+            ac.get(5).asInstanceOf[Int].intValue())
         }
         arr.iterator
       }
@@ -149,27 +174,80 @@ object AbilityAssessment {
     // val total_station = mongo.select("userId", "subject", "catgory", "expendTime", "createTime", "corrects", "paper.questions", "paper.modules", "StringCount")
     card.createOrReplaceTempView("answer_card")
     sparkSession.udf.register("predictedScore", new PredictedScore)
-    val predicted_score = sparkSession.sql("select userId,predictedScore(corrects,questions,times,points,createTime) predictedScore from answer_card group by userId")
+    val predicted_score = sparkSession.sql("select userId,predictedScore(corrects,questions,times,points,createTime) predictedScore,subject from answer_card group by userId,subject")
 
-    //    predicted_score.show(100000)
-    /**
-      * [
-      * 1,
-      * total_station_predict_score
-      * -1:0:0:0_
-      * 642:0:93:0_
-      * 435:7:152:72_
-      * 392:3:68:67_
-      *
-      * 482:0:46:1_
-      * 754:4:45:39|
-      * do_exercise_num 401|
-      * cumulative_time 179|
-      * week_predict_score -1:0:0:0]
-      */
     predicted_score.show(3000)
     //    predicted_score.rdd.saveAsTextFile("ability-assessment/result_a/")
-    predicted_score.rdd.saveAsTextFile("hdfs://huatu68/huatu/ability-assessment/result/".concat(args(0)))
+
+    val predicted_score_rdd = predicted_score.rdd
+
+    val ts_predicted_score_df = predicted_score_rdd.mapPartitions {
+      ite =>
+        var arr = new ArrayBuffer[TS_AbilityAssessment]()
+
+        while (ite.hasNext) {
+          val n = ite.next()
+          val userId = n.get(0).asInstanceOf[Long].longValue()
+          val predictedScore = n.get(1).asInstanceOf[Seq[String]].seq
+          val subject = n.get(2).asInstanceOf[Int].intValue()
+
+          arr += TS_AbilityAssessment(
+            userId, //userId
+            PredictedScore.getScore(predictedScore(0), subject), //total_station_grade: Double,
+            predictedScore(0), //total_station_predict_score
+            predictedScore(1).toLong, //do_exercise_num
+            predictedScore(2).toLong, //cumulative_time
+            predictedScore(4).toLong, //do_exercise_day
+            subject
+          )
+        }
+        arr.iterator
+    }.toDF()
+    ts_predicted_score_df.createOrReplaceTempView("ts_predicted_score_df")
+    val ts = sparkSession.sql("" +
+      " select " +
+      "userId," +
+      "total_station_grade," +
+      "total_station_predict_score," +
+      "do_exercise_num," +
+      "cumulative_time," +
+      "do_exercise_day," +
+      "subject," +
+      "Row_Number() OVER(partition by subject order by userId) rank " +
+      "from ts_predicted_score_df")
+
+    ts.show(5000)
+    val week_predicted_score_df = predicted_score_rdd.mapPartitions {
+      ite =>
+        var arr = new ArrayBuffer[Week_AbilityAssessment]()
+        while (ite.hasNext) {
+          val n = ite.next()
+          val userId = n.get(0).asInstanceOf[Long].longValue()
+          val predictedScore = n.get(1).asInstanceOf[Seq[String]].seq
+          val subject = n.get(2).asInstanceOf[Int].intValue()
+
+          arr += Week_AbilityAssessment(
+            userId, //userId
+            PredictedScore.getScore(predictedScore(3), subject), //week_grade
+            predictedScore(3), // week_predict_score
+            subject
+          )
+        }
+        arr.iterator
+    }.toDF()
+    week_predicted_score_df.createOrReplaceTempView("week_predicted_score_df")
+    val week = sparkSession.sql("" +
+      " select " +
+      "userId," +
+      "week_grade," +
+      "week_predict_score," +
+      "subject," +
+      "Row_Number() OVER(partition by subject order by userId) rank " +
+      "from week_predicted_score_df")
+    week.show(5000)
+
+    //    aa.take(1000).foreach(println)
+    //    aa.saveAsTextFile("hdfs://huatu68/huatu/ability-assessment/result/".concat(args(0)))
     //      .rdd.saveAsTextFile(args(0))
   }
 
