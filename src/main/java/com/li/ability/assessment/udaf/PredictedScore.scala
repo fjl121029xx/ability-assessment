@@ -144,7 +144,8 @@ class PredictedScore extends UserDefinedAggregateFunction {
     val createTime = input.get(4).asInstanceOf[Long].longValue()
 
     val week_start: Long = TimeUtils.getWeekStartTimeStamp()
-    val week_end: Long = TimeUtils.getWeekendTimeStamp()
+    val week_end: Long = TimeUtils.getWeekEndTimeStamp()
+    println("createTime is " + createTime + ", week_start is " + week_start + ", week_end is " + week_end + ". compare result is " + (week_start <= createTime && createTime < week_end))
     if (week_start <= createTime && createTime < week_end) {
       // mutmap 是本次输入
       val week_predicted_score = PredictedScore.weekPredictedScore(mutmap, PredictedScore.getTSPredictScore2Map(buffer.getAs[String](3)))
@@ -363,6 +364,8 @@ object PredictedScore {
 
     //    println(getScore("3125:34:79:1805_3280:9:24:552_3298:5:23:402_3250:3:15:324_642:18:88:3580_435:35:117:4941_3195:2:12:389_3332:6:26:486_392:58:159:6079_482:7:34:1422_754:11:72:4198_0:0:2:92",
     //      2))
+    println(TimeUtils.getWeekEndTimeStamp())
+    println(System.currentTimeMillis())
     println(TimeUtils.getWeekStartTimeStamp())
   }
 
