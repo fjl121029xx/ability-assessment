@@ -237,8 +237,8 @@ object AbilityAssessment {
       "cumulative_time," +
       "do_exercise_day," +
       "subject," +
-      "Row_Number() OVER(partition by subject order by total_station_predict_score) rank " +
-      "from ts_predicted_score_df")
+      "Row_Number() OVER(partition by subject order by total_station_predict_score desc) rank " +
+      "from ts_predicted_score_df order by total_station_predict_score desc")
 
     ts.show(5000)
 
@@ -275,13 +275,13 @@ object AbilityAssessment {
       "week_grade," +
       "week_predict_score," +
       "subject," +
-      "Row_Number() OVER(partition by subject order by week_predict_score) rank " +
-      "from week_predicted_score_df")
+      "Row_Number() OVER(partition by subject order by week_predict_score desc) rank " +
+      "from week_predicted_score_df  order by week_predict_score desc")
     week.show(5000)
 
 
     val hbaseConf = HBaseConfiguration.create()
-    hbaseConf.set("hbase.zookeeper.quorum", "192.168.100.68,192.168.100.70,192.168.100.72")
+    hbaseConf.set("hbase.zookeeper.quorum", "192.168.100.27,192.168.100.28,192.168.100.29")
     hbaseConf.set("hbase.zookeeper.property.clientPort", "2181")
     hbaseConf.set("hbase.rootdir", "/hbase")
     hbaseConf.set("hbase.client.retries.number", "3")
@@ -302,13 +302,13 @@ object AbilityAssessment {
           val t = ite.next()
 
           val userId = t.get(0).asInstanceOf[Long].longValue()
-          val total_station_grade = t.get(1).asInstanceOf[String].toString
-          val total_station_predict_score = t.get(2).asInstanceOf[Double].doubleValue()
+          val total_station_grade = t.get(2).asInstanceOf[String].toString
+          val total_station_predict_score = t.get(1).asInstanceOf[Double].doubleValue()
           val do_exercise_num = t.get(3).asInstanceOf[Long].longValue()
           val cumulative_time = t.get(4).asInstanceOf[Long].longValue()
           val do_exercise_day = t.get(5).asInstanceOf[Long].longValue()
-          val subject = t.get(6).asInstanceOf[Long].longValue()
-          val rank = t.get(7).asInstanceOf[Long].longValue()
+          val subject = t.get(6).asInstanceOf[Int].intValue()
+          val rank = t.get(7).asInstanceOf[Int].intValue()
 
 
           val put = new Put(Bytes.toBytes(userId)) //行健的值
@@ -340,10 +340,10 @@ object AbilityAssessment {
           val t = ite.next()
 
           val userId = t.get(0).asInstanceOf[Long].longValue()
-          val week_grade = t.get(1).asInstanceOf[String].toString
-          val week_predict_score = t.get(2).asInstanceOf[Double].doubleValue()
-          val subject = t.get(3).asInstanceOf[Long].longValue()
-          val rank = t.get(4).asInstanceOf[Long].longValue()
+          val week_grade = t.get(2).asInstanceOf[String].toString
+          val week_predict_score = t.get(1).asInstanceOf[Double].doubleValue()
+          val subject = t.get(3).asInstanceOf[Int].intValue()
+          val rank = t.get(4).asInstanceOf[Int].intValue()
 
 
           val put = new Put(Bytes.toBytes(userId+"-"+TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis(),"yyyy-w"))) //行健的值
