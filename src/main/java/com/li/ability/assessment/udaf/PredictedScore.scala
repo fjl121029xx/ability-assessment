@@ -145,7 +145,7 @@ class PredictedScore extends UserDefinedAggregateFunction {
     //cumulative_time
     buffer.update(2, timeBuffer)
 
-    //createTime
+    //createTimeHBaseUtil
     val createTime = input.get(4).getClass.getName match {
       case "java.lang.Integer" =>input.get(4).asInstanceOf[Int].intValue()
       case "java.lang.Long" =>input.get(4).asInstanceOf[Long].longValue()
