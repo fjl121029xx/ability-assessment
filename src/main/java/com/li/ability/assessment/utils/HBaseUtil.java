@@ -21,27 +21,9 @@ public class HBaseUtil {
     public static final String ZK = "192.168.100.68,192.168.100.70,192.168.100.72";
     public static final String CL = "2181";
     public static final String DIR = "/hbase";
-//    public static final String ZK = "192.168.100.27,192.168.100.28,192.168.100.29";
-//    public static final String CL = "2181";
-//    public static final String DIR = "/hbase";
 
     static {
 
-        conf = HBaseConfiguration.create();
-        conf.set("hbase.zookeeper.quorum", HBaseUtil.ZK);
-//        conf.set("hbase.zookeeper.quorum", "192.168.65.130");
-        conf.set("hbase.zookeeper.property.clientPort", HBaseUtil.CL);
-        conf.set("hbase.rootdir", HBaseUtil.DIR);
-
-        try {
-            connection = ConnectionFactory.createConnection(conf);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Before
-    public void init() {
         conf = HBaseConfiguration.create();
         conf.set("hbase.zookeeper.quorum", HBaseUtil.ZK);
 //        conf.set("hbase.zookeeper.quorum", "192.168.65.130");
@@ -114,7 +96,7 @@ public class HBaseUtil {
     public static void main(String[] args) throws Exception {
 
         Configuration conf = HBaseConfiguration.create();
-        conf.set("hbase.zookeeper.quorum", "192.168.100.27,192.168.100.28,192.168.100.29");
+        conf.set("hbase.zookeeper.quorum", "192.168.100.68,192.168.100.70,192.168.100.72");
         conf.set("hbase.zookeeper.property.clientPort","2181");
         conf.set("hbase.rootdir", "/hbase");
 
@@ -132,38 +114,7 @@ public class HBaseUtil {
 
     }
 
-    /* public static void main(String[] args) throws Exception {
 
-         Configuration conf = HBaseConfiguration.create();
- //        conf.set("hbase.zookeeper.quorum", "192.168.65.130");
-         conf.set("hbase.zookeeper.quorum","192.168.100.191");
-         conf.set("hbase.zookeeper.property.clientPort", HBaseUtil.CL);
-         conf.set("hbase.rootdir", HBaseUtil.DIR);
-
-         HBaseAdmin admin = new HBaseAdmin(conf);
-
-         HTableDescriptor table = new HTableDescriptor(AccuracyBean.TEST_HBASE_TABLE);
-
-         HColumnDescriptor columnFamily = new HColumnDescriptor(AccuracyBean.HBASE_TABLE_FAMILY_COLUMNS);
-         columnFamily.setMaxVersions(10);
-         table.addFamily(columnFamily);
-
-         HColumnDescriptor columnFamily2 = new HColumnDescriptor(AccuracyBean.HBASE_TABLE_FAMILY_COLUMNS2);
-         columnFamily2.setMaxVersions(10);
-         table.addFamily(columnFamily2);
-
-         HColumnDescriptor columnFamily3 = new HColumnDescriptor(AccuracyBean.HBASE_TABLE_FAMILY_COLUMNS3);
-         columnFamily2.setMaxVersions(10);
-         table.addFamily(columnFamily3);
-
-         HColumnDescriptor columnFamily4 = new HColumnDescriptor(AccuracyBean.HBASE_TABLE_FAMILY_COLUMNS4);
-         columnFamily2.setMaxVersions(10);
-         table.addFamily(columnFamily4);
-
-         admin.createTable(table);
-         admin.close();
-
-     }*/
     @Test
     public void testPut() throws Exception {
 
