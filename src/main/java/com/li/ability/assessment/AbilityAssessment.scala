@@ -282,7 +282,7 @@ object AbilityAssessment {
       "userId," +
       "week_grade," +
       "week_predict_score," +
-      "subject " +
+      "subject, " +
       "Row_Number() OVER(partition by subject order by week_grade desc) rank " +
       "from week_predicted_score_df  ")
     week.show(5000)
