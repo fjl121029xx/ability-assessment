@@ -176,13 +176,18 @@ object AbilityAssessment {
     predicted_score.show(3000)
     //    predicted_score.rdd.saveAsTextFile("ability-assessment/result_a/")
     // 累加器
+    // 统计科目下的用户数量
     val ts_userCount_x = sc.longAccumulator("ts_userCount_x")
     val ts_userCount_g = sc.longAccumulator("ts_userCount_g")
     val ts_userCount_z = sc.longAccumulator("ts_userCount_z")
-
+    // 统计科目下的做题数量
     val ts_questionCount_x = sc.longAccumulator("ts_questionCount_x")
     val ts_questionCount_g = sc.longAccumulator("ts_questionCount_g")
     val ts_questionCount_z = sc.longAccumulator("ts_questionCount_z")
+    // 统计科目下的做题时长
+    val ts_cumulative_time_x = sc.longAccumulator("ts_cumulative_time_x")
+    val ts_cumulative_time_g = sc.longAccumulator("ts_cumulative_time_g")
+    val ts_cumulative_time_z = sc.longAccumulator("ts_cumulative_time_z")
 
     val week_userCount_x = sc.longAccumulator("userCount")
     val week_userCount_g = sc.longAccumulator("userCount")
@@ -206,13 +211,15 @@ object AbilityAssessment {
           if (subject == 1) {
             ts_userCount_x.add(1)
             ts_questionCount_x.add(predictedScore(1).toLong)
+            ts_cumulative_time_x.add(predictedScore(2).toLong)
           } else if (subject == 2) {
             ts_userCount_g.add(1)
             ts_questionCount_g.add(predictedScore(1).toLong)
+            ts_cumulative_time_g.add(predictedScore(2).toLong)
           } else if (subject == 3) {
             ts_userCount_z.add(1)
             ts_questionCount_z.add(predictedScore(1).toLong)
-
+            ts_cumulative_time_z.add(predictedScore(2).toLong)
           }
 
           arr += TS_AbilityAssessment(
@@ -237,7 +244,7 @@ object AbilityAssessment {
       "cumulative_time," +
       "do_exercise_day," +
       "subject," +
-      "Row_Number() OVER(partition by subject order by total_station_predict_score desc) rank " +
+      "Row_Number() OVER(partition by subject order by total_station_grade desc) rank " +
       "from ts_predicted_score_df order by total_station_predict_score desc")
 
     ts.show(5000)
@@ -275,7 +282,7 @@ object AbilityAssessment {
       "week_grade," +
       "week_predict_score," +
       "subject," +
-      "Row_Number() OVER(partition by subject order by week_predict_score desc) rank " +
+      "Row_Number() OVER(partition by subject order by week_grade desc) rank " +
       "from week_predicted_score_df  order by week_predict_score desc")
     week.show(5000)
 
@@ -369,7 +376,7 @@ object AbilityAssessment {
 
     week_hbasePar.saveAsHadoopDataset(week_jobConf)
 
-
+    sparkSession.stop()
   }
 
 }
