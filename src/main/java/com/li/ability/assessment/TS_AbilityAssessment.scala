@@ -37,7 +37,9 @@ case class TS_AbilityAssessment(userId: Long,
 case class Week_AbilityAssessment(userId: Long,
                                   week_grade: Double,
                                   week_predict_score: String,
-                                  subject: Int
+                                  subject: Int,
+                                  week_do_exercise_num: Long,
+                                  week_cumulative_time: Long
                                  )
 
 object AbilityAssessment {
@@ -270,7 +272,9 @@ object AbilityAssessment {
             userId, //userId
             PredictedScore.getScore(predictedScore(3), subject), //week_grade
             predictedScore(3), // week_predict_score
-            subject
+            subject,
+            predictedScore(5).toLong, //week_do_exercise_num
+            predictedScore(6).toLong //week_cumulative_time
           )
         }
         arr.iterator
@@ -282,10 +286,11 @@ object AbilityAssessment {
       "week_grade," +
       "week_predict_score," +
       "subject," +
+      "week_do_exercise_num," +
+      "week_cumulative_time " +
       "Row_Number() OVER(partition by subject order by week_grade desc) rank " +
       "from week_predicted_score_df  order by week_predict_score desc")
     week.show(5000)
-
 
     val hbaseConf = HBaseConfiguration.create()
     hbaseConf.set("hbase.zookeeper.quorum", "192.168.100.27,192.168.100.28,192.168.100.29")
@@ -327,6 +332,21 @@ object AbilityAssessment {
           put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("subject"), Bytes.toBytes(subject.toString))
           put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("rank"), Bytes.toBytes(rank.toString))
 
+
+          if (subject == 1) {
+            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("ts_userCount"), Bytes.toBytes(ts_userCount_x.value.toString))
+            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("ts_questionCount"), Bytes.toBytes(ts_questionCount_x.value.toString))
+            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("ts_cumulative_time"), Bytes.toBytes(ts_cumulative_time_x.value.toString))
+          } else if (subject == 2) {
+            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("ts_userCount"), Bytes.toBytes(ts_userCount_g.value.toString))
+            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("ts_questionCount"), Bytes.toBytes(ts_questionCount_g.value.toString))
+            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("ts_cumulative_time"), Bytes.toBytes(ts_cumulative_time_g.value.toString))
+          } else if (subject == 3) {
+            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("ts_userCount"), Bytes.toBytes(ts_userCount_z.value.toString))
+            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("ts_questionCount"), Bytes.toBytes(ts_questionCount_z.value.toString))
+            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("ts_cumulative_time"), Bytes.toBytes(ts_cumulative_time_z.value.toString))
+          }
+
           buffer += new Tuple2(new ImmutableBytesWritable, put)
           //            lis =  +: lis
         }
@@ -356,17 +376,21 @@ object AbilityAssessment {
           val t = ite.next()
 
           val userId = t.get(0).asInstanceOf[Long].longValue()
+
           val week_grade = t.get(2).asInstanceOf[String].toString
           val week_predict_score = t.get(1).asInstanceOf[Double].doubleValue()
           val subject = t.get(3).asInstanceOf[Int].intValue()
           val rank = t.get(4).asInstanceOf[Int].intValue()
+          val week_do_exercise_num = t.get(5).asInstanceOf[Long].longValue()
+          val week_cumulative_time = t.get(6).asInstanceOf[Long].longValue()
 
-
-          val put = new Put(Bytes.toBytes(userId+"-"+TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis(),"yyyy-w"))) //行健的值
+          val put = new Put(Bytes.toBytes(userId + "-" + TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis(), "yyyy-w"))) //行健的值
           put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("week_grade"), Bytes.toBytes(week_grade.toString))
           put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("week_predict_score"), Bytes.toBytes(week_predict_score.toString))
           put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("subject"), Bytes.toBytes(subject.toString))
           put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("rank"), Bytes.toBytes(rank.toString))
+          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("week_do_exercise_num"), Bytes.toBytes(week_do_exercise_num.toString))
+          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("week_cumulative_time"), Bytes.toBytes(week_cumulative_time.toString))
 
           buffer += new Tuple2(new ImmutableBytesWritable, put)
           //            lis =  +: lis

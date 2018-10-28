@@ -30,7 +30,9 @@ class PredictedScore extends UserDefinedAggregateFunction {
       StructField("cumulative_time", IntegerType, true),
       StructField("week_predict_score", StringType, true),
       StructField("createTime", LongType, true),
-      StructField("do_exercise_day", ArrayType(StringType), true)
+      StructField("do_exercise_day", ArrayType(StringType), true),
+      StructField("week_do_exercise_num", ArrayType(IntegerType), true),
+      StructField("week_cumulative_time", IntegerType, true)
     ))
   }
 
@@ -55,6 +57,10 @@ class PredictedScore extends UserDefinedAggregateFunction {
     buffer.update(4, 0L)
     // do_exercise_day
     buffer.update(5, Array())
+    // week_do_exercise_num
+    buffer.update(6, Array())
+    // week_cumulative_time
+    buffer.update(7, 0)
   }
 
 
@@ -124,7 +130,6 @@ class PredictedScore extends UserDefinedAggregateFunction {
     val questions = input.getSeq[Int](1)
     val questionSet = Set[Int]()
     buffer.getAs[Seq[Int]](1).foreach(questionSet += _)
-
     questions.foreach(f =>
       questionSet += f
     )
@@ -141,19 +146,39 @@ class PredictedScore extends UserDefinedAggregateFunction {
     buffer.update(2, timeBuffer)
 
     //createTime
-    val createTime = input.get(4).asInstanceOf[Long].longValue()
+    val createTime = input.get(4).getClass.getName match {
+      case "java.lang.Integer" =>input.get(4).asInstanceOf[Int].intValue()
+      case "java.lang.Long" =>input.get(4).asInstanceOf[Long].longValue()
+    }
 
     val week_start: Long = TimeUtils.getWeekStartTimeStamp()
     val week_end: Long = TimeUtils.getWeekEndTimeStamp()
-    println("createTime is " + createTime + ", week_start is " + week_start + ", week_end is " + week_end + ". compare result is " + (week_start <= createTime && createTime < week_end))
     if (week_start <= createTime && createTime < week_end) {
       // mutmap 是本次输入
       val week_predicted_score = PredictedScore.weekPredictedScore(mutmap, PredictedScore.getTSPredictScore2Map(buffer.getAs[String](3)))
-      println("week_predicted_score ->   " + week_predicted_score)
       //week_predict_score
       buffer.update(3, week_predicted_score)
+
+      val week_questionSet = Set[Int]()
+      buffer.getAs[Seq[Int]](6).foreach(week_questionSet += _)
+      questions.foreach(f =>
+        week_questionSet += f
+      )
+      //do_exercise_num
+      buffer.update(6, week_questionSet.toSeq)
+
+
+      var timeBuffer = buffer.get(7).asInstanceOf[Int].intValue()
+      input.getSeq[Int](2).toArray.foreach(f =>
+        timeBuffer += f.intValue()
+      )
+      //cumulative_time
+      buffer.update(7, timeBuffer)
+
     } else {
       buffer.update(3, buffer.getAs[String](3))
+      buffer.update(6, buffer.getSeq[Int](6))
+      buffer.update(7, buffer.get(7).asInstanceOf[Int].intValue())
     }
 
     val daySet = Set[String]()
@@ -206,6 +231,19 @@ class PredictedScore extends UserDefinedAggregateFunction {
     //do_exercise_day
     aggreBuffer.update(5, daySet.toSeq)
 
+
+    val week_questions = row.get(6).asInstanceOf[Seq[Int]].seq
+    val week_questionSet = Set[Int]()
+    aggreBuffer.get(6).asInstanceOf[Seq[Int]].seq.foreach(week_questionSet += _)
+    week_questions.foreach(f =>
+      week_questionSet += f
+    )
+    //do_exercise_num
+    aggreBuffer.update(6, week_questionSet.toSeq)
+    //cumulative_time
+    aggreBuffer.update(7, row.get(7).asInstanceOf[Int].intValue() + aggreBuffer.get(7).asInstanceOf[Int].intValue())
+
+
   }
 
   override def evaluate(buffer: Row): Any = {
@@ -215,13 +253,16 @@ class PredictedScore extends UserDefinedAggregateFunction {
     val cumulative_time = buffer.get(2).asInstanceOf[Int].intValue()
     val week_predict_score = buffer.getAs[String](3)
     val do_exercise_day = buffer.getAs[collection.mutable.Set[String]](5).size
-
+    val week_do_exercise_num = buffer.getAs[collection.mutable.Set[Int]](6).size
+    val week_cumulative_time = buffer.get(7).asInstanceOf[Int].intValue()
     Array(
       total_station_predict_score.replaceAll("-1:0:0:0_", ""),
       do_exercise_num.toString,
       cumulative_time.toString,
       week_predict_score.toString,
-      do_exercise_day.toString
+      do_exercise_day.toString,
+      week_do_exercise_num,
+      week_cumulative_time
     )
   }
 }
