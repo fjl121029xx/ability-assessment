@@ -5,6 +5,7 @@ import java.util.{Calendar, Date}
 
 import org.joda.time.DateTime
 import com.github.nscala_time.time.Imports._
+import org.apache.hadoop.hbase.util.Bytes
 
 object TimeUtils {
 
@@ -120,9 +121,11 @@ object TimeUtils {
     //    val a =TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis() , "yyyy-w").compareTo(TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis(), "yyyy-w"))
 
 
-    val tmp = convertDateStr2TimeStamp(TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis(), "yyyy-w"), "yyyy-w")
-
-    println(TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis(), "yyyy-w"))
-    println(tmp)
+    Bytes.toBytes(1)
+    Bytes.toBytes("1")
+    //    val tmp = convertDateStr2TimeStamp(TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis(), "yyyy-w"), "yyyy-w")
+    //
+    //    println(TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis(), "yyyy-w"))
+    //    println(tmp)
   }
 }

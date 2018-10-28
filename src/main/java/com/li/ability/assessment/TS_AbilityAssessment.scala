@@ -292,7 +292,7 @@ object AbilityAssessment {
     val total_station_jobConf = new JobConf(hbaseConf)
     total_station_jobConf.setOutputFormat(classOf[TableOutputFormat])
     total_station_jobConf.set(TableOutputFormat.OUTPUT_TABLE, "total_station_ability_assessment")
-    val ts_hbasePar = ts.rdd.mapPartitions {
+    val ts_hbasePar = ts.rdd.coalesce(1).mapPartitions {
       ite: Iterator[Row] =>
 
         //          var lis: Seq[] = Seq()
@@ -311,14 +311,14 @@ object AbilityAssessment {
           val rank = t.get(7).asInstanceOf[Int].intValue()
 
 
-          val put = new Put(Bytes.toBytes(userId)) //行健的值
-          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("total_station_grade"), Bytes.toBytes(total_station_grade))
-          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("total_station_predict_score"), Bytes.toBytes(total_station_predict_score))
-          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("do_exercise_num"), Bytes.toBytes(do_exercise_num))
-          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("cumulative_time"), Bytes.toBytes(cumulative_time))
-          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("do_exercise_day"), Bytes.toBytes(do_exercise_day))
-          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("subject"), Bytes.toBytes(subject))
-          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("rank"), Bytes.toBytes(rank))
+          val put = new Put(Bytes.toBytes(userId.toString)) //行健的值
+          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("total_station_grade"), Bytes.toBytes(total_station_grade.toString))
+          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("total_station_predict_score"), Bytes.toBytes(total_station_predict_score.toString))
+          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("do_exercise_num"), Bytes.toBytes(do_exercise_num.toString))
+          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("cumulative_time"), Bytes.toBytes(cumulative_time.toString))
+          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("do_exercise_day"), Bytes.toBytes(do_exercise_day.toString))
+          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("subject"), Bytes.toBytes(subject.toString))
+          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("rank"), Bytes.toBytes(rank.toString))
 
           buffer += new Tuple2(new ImmutableBytesWritable, put)
           //            lis =  +: lis
@@ -327,10 +327,19 @@ object AbilityAssessment {
     }
     ts_hbasePar.saveAsHadoopDataset(total_station_jobConf)
 
-    val week_jobConf = new JobConf(hbaseConf)
+
+    val week_hbaseConf = HBaseConfiguration.create()
+    week_hbaseConf.set("hbase.zookeeper.quorum", "192.168.100.27,192.168.100.28,192.168.100.29")
+    week_hbaseConf.set("hbase.zookeeper.property.clientPort", "2181")
+    week_hbaseConf.set("hbase.rootdir", "/hbase")
+    week_hbaseConf.set("hbase.client.retries.number", "3")
+    week_hbaseConf.set("hbase.rpc.timeout", "2000")
+    week_hbaseConf.set("hbase.client.operation.timeout", "30")
+    week_hbaseConf.set("hbase.client.scanner.timeout.period", "100")
+    val week_jobConf = new JobConf(week_hbaseConf)
     week_jobConf.setOutputFormat(classOf[TableOutputFormat])
     week_jobConf.set(TableOutputFormat.OUTPUT_TABLE, "week_ability_assessment")
-    val week_hbasePar = week.rdd.mapPartitions {
+    val week_hbasePar = week.rdd.coalesce(1).mapPartitions {
       ite: Iterator[Row] =>
 
         //          var lis: Seq[] = Seq()
@@ -347,10 +356,10 @@ object AbilityAssessment {
 
 
           val put = new Put(Bytes.toBytes(userId+"-"+TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis(),"yyyy-w"))) //行健的值
-          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("week_grade"), Bytes.toBytes(week_grade))
-          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("week_predict_score"), Bytes.toBytes(week_predict_score))
-          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("subject"), Bytes.toBytes(subject))
-          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("rank"), Bytes.toBytes(rank))
+          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("week_grade"), Bytes.toBytes(week_grade.toString))
+          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("week_predict_score"), Bytes.toBytes(week_predict_score.toString))
+          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("subject"), Bytes.toBytes(subject.toString))
+          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("rank"), Bytes.toBytes(rank.toString))
 
           buffer += new Tuple2(new ImmutableBytesWritable, put)
           //            lis =  +: lis
@@ -358,7 +367,7 @@ object AbilityAssessment {
         buffer.iterator
     }
 
-    week_hbasePar.saveAsHadoopDataset(total_station_jobConf)
+    week_hbasePar.saveAsHadoopDataset(week_jobConf)
 
 
   }
