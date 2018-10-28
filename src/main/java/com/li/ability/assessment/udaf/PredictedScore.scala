@@ -18,7 +18,7 @@ class PredictedScore extends UserDefinedAggregateFunction {
       StructField(" questions", ArrayType(IntegerType), true),
       StructField(" times", ArrayType(IntegerType), true),
       StructField(" points", ArrayType(IntegerType), true),
-      StructField(" createTime", LongType, true)
+      StructField(" createTime", StringType, true)
     ))
   }
 
@@ -30,9 +30,7 @@ class PredictedScore extends UserDefinedAggregateFunction {
       StructField("cumulative_time", IntegerType, true),
       StructField("week_predict_score", StringType, true),
       StructField("createTime", LongType, true),
-      StructField("do_exercise_day", ArrayType(StringType), true),
-      StructField("week_do_exercise_num", ArrayType(IntegerType), true),
-      StructField("week_cumulative_time", IntegerType, true)
+      StructField("do_exercise_day", ArrayType(StringType), true)
     ))
   }
 
@@ -57,10 +55,6 @@ class PredictedScore extends UserDefinedAggregateFunction {
     buffer.update(4, 0L)
     // do_exercise_day
     buffer.update(5, Array())
-    // week_do_exercise_num
-    buffer.update(6, Array())
-    // week_cumulative_time
-    buffer.update(7, 0)
   }
 
 
@@ -69,6 +63,13 @@ class PredictedScore extends UserDefinedAggregateFunction {
     val corrects: scala.Seq[Int] = input.getSeq[Int](0)
     val points: scala.Seq[Int] = input.getSeq[Int](3)
     val times: scala.Seq[Int] = input.getSeq[Int](2)
+
+
+    println(input.get(0).getClass.getName)
+    println(input.get(1).getClass.getName)
+    println(input.get(2).getClass.getName)
+    println(input.get(3).getClass.getName)
+    println(input.get(4).getClass.getName)
 
 
     // 记录本次update 知识点下的正确树立
@@ -145,10 +146,12 @@ class PredictedScore extends UserDefinedAggregateFunction {
     //cumulative_time
     buffer.update(2, timeBuffer)
 
+
     //createTimeHBaseUtil
     val createTime = input.get(4).getClass.getName match {
       case "java.lang.Integer" =>input.get(4).asInstanceOf[Int].intValue()
       case "java.lang.Long" =>input.get(4).asInstanceOf[Long].longValue()
+      case "java.lang.String" =>input.get(4).asInstanceOf[String].toLong
     }
 
     val week_start: Long = TimeUtils.getWeekStartTimeStamp()
@@ -159,26 +162,9 @@ class PredictedScore extends UserDefinedAggregateFunction {
       //week_predict_score
       buffer.update(3, week_predicted_score)
 
-      val week_questionSet = Set[Int]()
-      buffer.getAs[Seq[Int]](6).foreach(week_questionSet += _)
-      questions.foreach(f =>
-        week_questionSet += f
-      )
-      //do_exercise_num
-      buffer.update(6, week_questionSet.toSeq)
-
-
-      var timeBuffer = buffer.get(7).asInstanceOf[Int].intValue()
-      input.getSeq[Int](2).toArray.foreach(f =>
-        timeBuffer += f.intValue()
-      )
-      //cumulative_time
-      buffer.update(7, timeBuffer)
 
     } else {
       buffer.update(3, buffer.getAs[String](3))
-      buffer.update(6, buffer.getSeq[Int](6))
-      buffer.update(7, buffer.get(7).asInstanceOf[Int].intValue())
     }
 
     val daySet = Set[String]()
@@ -232,16 +218,6 @@ class PredictedScore extends UserDefinedAggregateFunction {
     aggreBuffer.update(5, daySet.toSeq)
 
 
-    val week_questions = row.get(6).asInstanceOf[Seq[Int]].seq
-    val week_questionSet = Set[Int]()
-    aggreBuffer.get(6).asInstanceOf[Seq[Int]].seq.foreach(week_questionSet += _)
-    week_questions.foreach(f =>
-      week_questionSet += f
-    )
-    //do_exercise_num
-    aggreBuffer.update(6, week_questionSet.toSeq)
-    //cumulative_time
-    aggreBuffer.update(7, row.get(7).asInstanceOf[Int].intValue() + aggreBuffer.get(7).asInstanceOf[Int].intValue())
 
 
   }
@@ -253,16 +229,12 @@ class PredictedScore extends UserDefinedAggregateFunction {
     val cumulative_time = buffer.get(2).asInstanceOf[Int].intValue()
     val week_predict_score = buffer.getAs[String](3)
     val do_exercise_day = buffer.getAs[collection.mutable.Set[String]](5).size
-    val week_do_exercise_num = buffer.getAs[collection.mutable.Set[Int]](6).size
-    val week_cumulative_time = buffer.get(7).asInstanceOf[Int].intValue()
     Array(
       total_station_predict_score.replaceAll("-1:0:0:0_", ""),
       do_exercise_num.toString,
       cumulative_time.toString,
       week_predict_score.toString,
-      do_exercise_day.toString,
-      week_do_exercise_num,
-      week_cumulative_time
+      do_exercise_day.toString
     )
   }
 }
@@ -405,9 +377,9 @@ object PredictedScore {
 
     //    println(getScore("3125:34:79:1805_3280:9:24:552_3298:5:23:402_3250:3:15:324_642:18:88:3580_435:35:117:4941_3195:2:12:389_3332:6:26:486_392:58:159:6079_482:7:34:1422_754:11:72:4198_0:0:2:92",
     //      2))
-    println(TimeUtils.getWeekEndTimeStamp())
-    println(System.currentTimeMillis())
-    println(TimeUtils.getWeekStartTimeStamp())
+//
+    val a :Long =267L
+    println(a.toString)
   }
 
   //  def main(args: Array[String]): Unit = {

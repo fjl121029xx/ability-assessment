@@ -22,7 +22,7 @@ case class AnswerCard(userId: Long,
                       questions: Seq[Int],
                       times: Seq[Int],
                       points: Seq[Int],
-                      createTime: Long,
+                      createTime: String,
                       subject: Int)
 
 case class TS_AbilityAssessment(userId: Long,
@@ -37,9 +37,7 @@ case class TS_AbilityAssessment(userId: Long,
 case class Week_AbilityAssessment(userId: Long,
                                   week_grade: Double,
                                   week_predict_score: String,
-                                  subject: Int,
-                                  week_do_exercise_num: Long,
-                                  week_cumulative_time: Long
+                                  subject: Int
                                  )
 
 object AbilityAssessment {
@@ -52,7 +50,7 @@ object AbilityAssessment {
 
     val conf = new SparkConf()
       .setAppName("AbilityAssessment")
-      //      .setMaster("local[3]")
+//            .setMaster("local[3]")
       .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
       .set("spark.mongodb.input.readPreference.name", "secondaryPreferred")
       .set("spark.mongodb.input.partitioner", "MongoSamplePartitioner")
@@ -121,6 +119,7 @@ object AbilityAssessment {
         )
       )).toDF() // Uses the ReadConfig
     ztk_answer_card.createOrReplaceTempView("ztk_answer_card")
+    ztk_answer_card.printSchema()
     val zac_df = sparkSession.sql("select userId,corrects,paper.questions,times,createTime,subject from ztk_answer_card")
 
     zac_df.show(2000)
@@ -162,7 +161,7 @@ object AbilityAssessment {
             questions, //questions
             ac.getSeq[Int](3), //times
             points, //points
-            ac.get(4).asInstanceOf[Long].longValue(), //createTime
+            ac.get(4).asInstanceOf[Long].toString, //createTime
             ac.get(5).asInstanceOf[Int].intValue()) //subject
         }
         arr.iterator
@@ -272,9 +271,7 @@ object AbilityAssessment {
             userId, //userId
             PredictedScore.getScore(predictedScore(3), subject), //week_grade
             predictedScore(3), // week_predict_score
-            subject,
-            predictedScore(5).toLong, //week_do_exercise_num
-            predictedScore(6).toLong //week_cumulative_time
+            subject
           )
         }
         arr.iterator
@@ -285,9 +282,7 @@ object AbilityAssessment {
       "userId," +
       "week_grade," +
       "week_predict_score," +
-      "subject," +
-      "week_do_exercise_num," +
-      "week_cumulative_time " +
+      "subject " +
       "Row_Number() OVER(partition by subject order by week_grade desc) rank " +
       "from week_predicted_score_df  order by week_predict_score desc")
     week.show(5000)
@@ -389,8 +384,6 @@ object AbilityAssessment {
           put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("week_predict_score"), Bytes.toBytes(week_predict_score.toString))
           put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("subject"), Bytes.toBytes(subject.toString))
           put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("rank"), Bytes.toBytes(rank.toString))
-          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("week_do_exercise_num"), Bytes.toBytes(week_do_exercise_num.toString))
-          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("week_cumulative_time"), Bytes.toBytes(week_cumulative_time.toString))
 
           buffer += new Tuple2(new ImmutableBytesWritable, put)
           //            lis =  +: lis
