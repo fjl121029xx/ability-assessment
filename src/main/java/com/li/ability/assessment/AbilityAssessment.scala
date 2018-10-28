@@ -246,7 +246,7 @@ object AbilityAssessment {
       "do_exercise_day," +
       "subject," +
       "Row_Number() OVER(partition by subject order by total_station_grade desc) rank " +
-      "from ts_predicted_score_df order by total_station_predict_score desc")
+      "from ts_predicted_score_df")
 
     ts.show(5000)
 
@@ -284,7 +284,7 @@ object AbilityAssessment {
       "week_predict_score," +
       "subject " +
       "Row_Number() OVER(partition by subject order by week_grade desc) rank " +
-      "from week_predicted_score_df  order by week_predict_score desc")
+      "from week_predicted_score_df  ")
     week.show(5000)
 
     val hbaseConf = HBaseConfiguration.create()
