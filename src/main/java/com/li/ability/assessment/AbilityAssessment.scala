@@ -50,7 +50,7 @@ object AbilityAssessment {
 
     val conf = new SparkConf()
       .setAppName("AbilityAssessment")
-//            .setMaster("local[3]")
+      //            .setMaster("local[3]")
       .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
       .set("spark.mongodb.input.readPreference.name", "secondaryPreferred")
       .set("spark.mongodb.input.partitioner", "MongoSamplePartitioner")
@@ -288,8 +288,6 @@ object AbilityAssessment {
     week.show(5000)
 
 
-
-
     val week_hbaseConf = HBaseConfiguration.create()
     week_hbaseConf.set("hbase.zookeeper.quorum", "192.168.100.27,192.168.100.28,192.168.100.29")
     week_hbaseConf.set("hbase.zookeeper.property.clientPort", "2181")
@@ -316,8 +314,8 @@ object AbilityAssessment {
           val week_predict_score = t.get(1).asInstanceOf[Double].doubleValue()
           val subject = t.get(3).asInstanceOf[Int].intValue()
           val rank = t.get(4).asInstanceOf[Int].intValue()
-//          val week_do_exercise_num = t.get(5).asInstanceOf[Long].longValue()
-//          val week_cumulative_time = t.get(6).asInstanceOf[Long].longValue()
+          //          val week_do_exercise_num = t.get(5).asInstanceOf[Long].longValue()
+          //          val week_cumulative_time = t.get(6).asInstanceOf[Long].longValue()
 
           val put = new Put(Bytes.toBytes(userId + "-" + TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis(), "yyyy-w"))) //行健的值
           put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("week_grade"), Bytes.toBytes(week_grade.toString))
@@ -333,6 +331,18 @@ object AbilityAssessment {
 
     week_hbasePar.saveAsHadoopDataset(week_jobConf)
 
+
+    val ts_unum_x = sc.broadcast(ts_userCount_x.value.toString)
+    val ts_qnum_x = sc.broadcast(ts_questionCount_x.value.toString)
+    val ts_tnum_x = sc.broadcast(ts_cumulative_time_x.value.toString)
+
+    val ts_unum_g = sc.broadcast(ts_userCount_g.value.toString)
+    val ts_qnum_g = sc.broadcast(ts_questionCount_g.value.toString)
+    val ts_tnum_g = sc.broadcast(ts_cumulative_time_g.value.toString)
+
+    val ts_unum_z = sc.broadcast(ts_userCount_z.value.toString)
+    val ts_qnum_z = sc.broadcast(ts_questionCount_z.value.toString)
+    val ts_tnum_z = sc.broadcast(ts_cumulative_time_z.value.toString)
 
     val hbaseConf = HBaseConfiguration.create()
     hbaseConf.set("hbase.zookeeper.quorum", "192.168.100.27,192.168.100.28,192.168.100.29")
@@ -376,17 +386,17 @@ object AbilityAssessment {
 
 
           if (subject == 1) {
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("ts_userCount"), Bytes.toBytes(ts_userCount_x.value.toString))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("ts_questionCount"), Bytes.toBytes(ts_questionCount_x.value.toString))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("ts_cumulative_time"), Bytes.toBytes(ts_cumulative_time_x.value.toString))
+            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("ts_userCount"), Bytes.toBytes(ts_unum_x.value))
+            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("ts_questionCount"), Bytes.toBytes(ts_qnum_x.value))
+            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("ts_cumulative_time"), Bytes.toBytes(ts_tnum_x.value))
           } else if (subject == 2) {
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("ts_userCount"), Bytes.toBytes(ts_userCount_g.value.toString))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("ts_questionCount"), Bytes.toBytes(ts_questionCount_g.value.toString))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("ts_cumulative_time"), Bytes.toBytes(ts_cumulative_time_g.value.toString))
+            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("ts_userCount"), Bytes.toBytes(ts_unum_g.value))
+            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("ts_questionCount"), Bytes.toBytes(ts_qnum_g.value))
+            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("ts_cumulative_time"), Bytes.toBytes(ts_tnum_g.value))
           } else if (subject == 3) {
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("ts_userCount"), Bytes.toBytes(ts_userCount_z.value.toString))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("ts_questionCount"), Bytes.toBytes(ts_questionCount_z.value.toString))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("ts_cumulative_time"), Bytes.toBytes(ts_cumulative_time_z.value.toString))
+            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("ts_userCount"), Bytes.toBytes(ts_unum_z.value))
+            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("ts_questionCount"), Bytes.toBytes(ts_qnum_z.value))
+            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("ts_cumulative_time"), Bytes.toBytes(ts_tnum_z.value))
           }
 
           buffer += new Tuple2(new ImmutableBytesWritable, put)
