@@ -289,7 +289,7 @@ object AbilityAssessment {
 
 
     val week_hbaseConf = HBaseConfiguration.create()
-    week_hbaseConf.set("hbase.zookeeper.quorum", "192.168.100.27,192.168.100.28,192.168.100.29")
+    week_hbaseConf.set("hbase.zookeeper.quorum", "192.168.100.68,192.168.100.70,192.168.100.72")
     week_hbaseConf.set("hbase.zookeeper.property.clientPort", "2181")
     week_hbaseConf.set("hbase.rootdir", "/hbase")
     week_hbaseConf.set("hbase.client.retries.number", "3")
@@ -345,7 +345,7 @@ object AbilityAssessment {
     val ts_tnum_z = sc.broadcast(ts_cumulative_time_z.value.toString)
 
     val hbaseConf = HBaseConfiguration.create()
-    hbaseConf.set("hbase.zookeeper.quorum", "192.168.100.27,192.168.100.28,192.168.100.29")
+    hbaseConf.set("hbase.zookeeper.quorum", "192.168.100.68,192.168.100.70,192.168.100.72")
     hbaseConf.set("hbase.zookeeper.property.clientPort", "2181")
     hbaseConf.set("hbase.rootdir", "/hbase")
     hbaseConf.set("hbase.client.retries.number", "3")
@@ -375,7 +375,7 @@ object AbilityAssessment {
           val rank = t.get(7).asInstanceOf[Int].intValue()
 
 
-          val put = new Put(Bytes.toBytes(userId.toString)) //行健的值
+          val put = new Put(Bytes.toBytes(userId.toString+"-"+subject)) //行健的值
           put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("total_station_grade"), Bytes.toBytes(total_station_grade.toString))
           put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("total_station_predict_score"), Bytes.toBytes(total_station_predict_score.toString))
           put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("do_exercise_num"), Bytes.toBytes(do_exercise_num.toString))
