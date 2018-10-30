@@ -71,14 +71,6 @@ class PredictedScore extends UserDefinedAggregateFunction {
     val points: scala.Seq[Int] = input.getSeq[Int](3)
     val times: scala.Seq[Int] = input.getSeq[Int](2)
 
-
-    println(input.get(0).getClass.getName)
-    println(input.get(1).getClass.getName)
-    println(input.get(2).getClass.getName)
-    println(input.get(3).getClass.getName)
-    println(input.get(4).getClass.getName)
-
-
     // 记录本次update 知识点下的正确树立
     var mutmap = Map[Int, (Int, Int, Int)]()
     // points.zip(corrects)
@@ -162,6 +154,9 @@ class PredictedScore extends UserDefinedAggregateFunction {
 
     val week_start: Long = TimeUtils.getWeekStartTimeStamp()
     val week_end: Long = TimeUtils.getWeekEndTimeStamp()
+
+    println(buffer.get(6).getClass.getName)
+    println(buffer.get(7).getClass.getName)
     if (week_start <= createTime && createTime < week_end) {
       // mutmap 是本次输入
       val week_predicted_score = PredictedScore.weekPredictedScore(mutmap, PredictedScore.getTSPredictScore2Map(buffer.getAs[String](3)))
@@ -265,8 +260,8 @@ class PredictedScore extends UserDefinedAggregateFunction {
       cumulative_time.toString,
       week_predict_score.toString,
       do_exercise_day.toString,
-      week_do_exercise_num,
-      week_cumulative_time
+      week_do_exercise_num.toString,
+      week_cumulative_time.toString
     )
   }
 }

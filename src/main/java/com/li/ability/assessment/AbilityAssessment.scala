@@ -50,7 +50,7 @@ object AbilityAssessment {
 
     val conf = new SparkConf()
       .setAppName("AbilityAssessment")
-      //            .setMaster("local[3]")
+//                  .setMaster("local[3]")
       .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
       .set("spark.mongodb.input.readPreference.name", "secondaryPreferred")
       .set("spark.mongodb.input.partitioner", "MongoSamplePartitioner")
@@ -121,6 +121,7 @@ object AbilityAssessment {
     ztk_answer_card.createOrReplaceTempView("ztk_answer_card")
     ztk_answer_card.printSchema()
     val zac_df = sparkSession.sql("select userId,corrects,paper.questions,times,createTime,subject from ztk_answer_card")
+//        .limit(100)
 
     zac_df.show(2000)
     //    zac_df.checkpoint()
