@@ -309,7 +309,7 @@ object AbilityAssessment {
       ite: Iterator[Row] =>
 
         //          var lis: Seq[] = Seq()
-        var buffer = new ArrayBuffer[Tuple2[ImmutableBytesWritable, Put]]()
+        var buffer = new ArrayBuffer[(ImmutableBytesWritable, Put)]()
 
         while (ite.hasNext) {
           val t = ite.next()
@@ -402,7 +402,7 @@ object AbilityAssessment {
             put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("ts_userCount"), Bytes.toBytes(ts_unum_g.value))
             put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("ts_questionCount"), Bytes.toBytes(ts_qnum_g.value))
             put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("ts_cumulative_time"), Bytes.toBytes(ts_tnum_g.value))
-          } else if (subject == 3) {
+          } else if (subject == 3) {】
             put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("ts_userCount"), Bytes.toBytes(ts_unum_z.value))
             put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("ts_questionCount"), Bytes.toBytes(ts_qnum_z.value))
             put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("ts_cumulative_time"), Bytes.toBytes(ts_tnum_z.value))
