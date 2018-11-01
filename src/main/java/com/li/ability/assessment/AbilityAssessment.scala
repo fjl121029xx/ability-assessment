@@ -180,6 +180,9 @@ object AbilityAssessment {
     predicted_score.show(3000)
     //    predicted_score.rdd.saveAsTextFile("ability-assessment/result_a/")
     // 累加器
+    /**
+      * 全站
+      */
     // 统计科目下的用户数量
     val ts_userCount_x = sc.longAccumulator("ts_userCount_x")
     val ts_userCount_g = sc.longAccumulator("ts_userCount_g")
@@ -192,13 +195,22 @@ object AbilityAssessment {
     val ts_cumulative_time_x = sc.longAccumulator("ts_cumulative_time_x")
     val ts_cumulative_time_g = sc.longAccumulator("ts_cumulative_time_g")
     val ts_cumulative_time_z = sc.longAccumulator("ts_cumulative_time_z")
+    /**
+      * 周
+      */
+    // 统计科目下的用户数量
+    val week_userCount_x = sc.longAccumulator("week_userCount_x")
+    val week_userCount_g = sc.longAccumulator("week_userCount_g")
+    val week_userCount_z = sc.longAccumulator("week_userCount_z")
 
-    val week_userCount_x = sc.longAccumulator("userCount")
-    val week_userCount_g = sc.longAccumulator("userCount")
-    val week_userCount_z = sc.longAccumulator("userCount")
-
-
-    val week_questionCount = sc.longAccumulator("questionCount")
+    // 统计科目下的做题数量
+    val week_questionCount_x = sc.longAccumulator("week_questionCount_x")
+    val week_questionCount_g = sc.longAccumulator("week_questionCount_g")
+    val week_questionCount_z = sc.longAccumulator("week_questionCount_z")
+    // 统计科目下的做题时长
+    val week_cumulative_time_x = sc.longAccumulator("week_cumulative_time_x")
+    val week_cumulative_time_g = sc.longAccumulator("week_cumulative_time_g")
+    val week_cumulative_time_z = sc.longAccumulator("week_cumulative_time_z")
 
     val predicted_score_rdd = predicted_score.rdd
 
@@ -264,11 +276,18 @@ object AbilityAssessment {
 
           if (subject == 1) {
             week_userCount_x.add(1)
+            week_questionCount_x.add(predictedScore(1).toLong)
+            week_cumulative_time_x.add(predictedScore(2).toLong)
           } else if (subject == 2) {
             week_userCount_g.add(1)
+            week_questionCount_g.add(predictedScore(1).toLong)
+            week_cumulative_time_g.add(predictedScore(2).toLong)
           } else if (subject == 3) {
             week_userCount_z.add(1)
+            week_questionCount_z.add(predictedScore(1).toLong)
+            week_cumulative_time_z.add(predictedScore(2).toLong)
           }
+
 
           arr += Week_AbilityAssessment(
             userId, //userId
@@ -293,6 +312,19 @@ object AbilityAssessment {
       "week_cumulative_time " +
       "from week_predicted_score_df  ")
     week.show(5000)
+
+
+    val week_unum_x = sc.broadcast(week_userCount_x.value.toString)
+    val week_qnum_x = sc.broadcast(week_questionCount_x.value.toString)
+    val week_tnum_x = sc.broadcast(week_cumulative_time_x.value.toString)
+
+    val week_unum_g = sc.broadcast(week_userCount_g.value.toString)
+    val week_qnum_g = sc.broadcast(week_questionCount_g.value.toString)
+    val week_tnum_g = sc.broadcast(week_cumulative_time_g.value.toString)
+
+    val week_unum_z = sc.broadcast(week_userCount_g.value.toString)
+    val week_qnum_z = sc.broadcast(week_questionCount_g.value.toString)
+    val week_tnum_z = sc.broadcast(week_cumulative_time_g.value.toString)
 
     val week_hbaseConf = HBaseConfiguration.create()
     week_hbaseConf.set("hbase.zookeeper.quorum", "192.168.100.68,192.168.100.70,192.168.100.72")
@@ -331,6 +363,21 @@ object AbilityAssessment {
           put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("rank"), Bytes.toBytes(rank.toString))
           put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("week_do_exercise_num"), Bytes.toBytes(week_do_exercise_num.toString))
           put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("week_cumulative_time"), Bytes.toBytes(week_cumulative_time.toString))
+
+
+          if (subject == 1) {
+            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("week_userCount"), Bytes.toBytes(week_unum_x.value))
+            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("week_questionCount"), Bytes.toBytes(week_qnum_x.value))
+            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("week_cumulative_time"), Bytes.toBytes(week_tnum_x.value))
+          } else if (subject == 2) {
+            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("week_userCount"), Bytes.toBytes(week_unum_g.value))
+            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("week_questionCount"), Bytes.toBytes(week_qnum_g.value))
+            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("week_cumulative_time"), Bytes.toBytes(week_tnum_g.value))
+          } else if (subject == 3) {
+            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("week_userCount"), Bytes.toBytes(week_unum_z.value))
+            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("week_questionCount"), Bytes.toBytes(week_qnum_z.value))
+            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("week_cumulative_time"), Bytes.toBytes(week_tnum_z.value))
+          }
 
           buffer += new Tuple2(new ImmutableBytesWritable, put)
           //            lis =  +: lis
@@ -402,7 +449,7 @@ object AbilityAssessment {
             put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("ts_userCount"), Bytes.toBytes(ts_unum_g.value))
             put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("ts_questionCount"), Bytes.toBytes(ts_qnum_g.value))
             put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("ts_cumulative_time"), Bytes.toBytes(ts_tnum_g.value))
-          } else if (subject == 3) {】
+          } else if (subject == 3) {
             put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("ts_userCount"), Bytes.toBytes(ts_unum_z.value))
             put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("ts_questionCount"), Bytes.toBytes(ts_qnum_z.value))
             put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("ts_cumulative_time"), Bytes.toBytes(ts_tnum_z.value))
