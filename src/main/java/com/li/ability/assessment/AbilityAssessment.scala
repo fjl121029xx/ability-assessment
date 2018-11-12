@@ -31,7 +31,8 @@ case class TS_AbilityAssessment(userId: Long,
                                 do_exercise_num: Long,
                                 cumulative_time: Long,
                                 do_exercise_day: Long,
-                                subject: Int
+                                subject: Int,
+                                total_correct_num: Long
                                )
 
 case class Week_AbilityAssessment(userId: Long,
@@ -39,7 +40,8 @@ case class Week_AbilityAssessment(userId: Long,
                                   week_predict_score: String,
                                   subject: Int,
                                   week_do_exercise_num: Long,
-                                  week_cumulative_time: Long
+                                  week_cumulative_time: Long,
+                                  week_correct_num: Long
                                  )
 
 object AbilityAssessment {
@@ -122,7 +124,8 @@ object AbilityAssessment {
       )).toDF() // Uses the ReadConfig
     ztk_answer_card.createOrReplaceTempView("ztk_answer_card")
     ztk_answer_card.printSchema()
-    val zac_df = sparkSession.sql("select userId,corrects,paper.questions,times,createTime,subject from ztk_answer_card")
+    val zac_df = sparkSession.sql("select userId,corrects,paper.questions,times,createTime,subject from ztk" +
+      "_answer_card")
     //        .limit(100)
 
     zac_df.show(2000)
@@ -195,22 +198,30 @@ object AbilityAssessment {
     val ts_cumulative_time_x = sc.longAccumulator("ts_cumulative_time_x")
     val ts_cumulative_time_g = sc.longAccumulator("ts_cumulative_time_g")
     val ts_cumulative_time_z = sc.longAccumulator("ts_cumulative_time_z")
+    // 统计科目下的正确数量
+    val ts_correct_num_x = sc.longAccumulator("ts_correct_num_x")
+    val ts_correct_num_g = sc.longAccumulator("ts_correct_num_g")
+    val ts_correct_num_z = sc.longAccumulator("ts_correct_num_z")
     /**
       * 周
       */
-    // 统计科目下的用户数量
+    // 周:统计科目下的用户数量
     val week_userCount_x = sc.longAccumulator("week_userCount_x")
     val week_userCount_g = sc.longAccumulator("week_userCount_g")
     val week_userCount_z = sc.longAccumulator("week_userCount_z")
 
-    // 统计科目下的做题数量
+    // 周:统计科目下的做题数量
     val week_questionCount_x = sc.longAccumulator("week_questionCount_x")
     val week_questionCount_g = sc.longAccumulator("week_questionCount_g")
     val week_questionCount_z = sc.longAccumulator("week_questionCount_z")
-    // 统计科目下的做题时长
+    // 周:统计科目下的做题时长
     val week_cumulative_time_x = sc.longAccumulator("week_cumulative_time_x")
     val week_cumulative_time_g = sc.longAccumulator("week_cumulative_time_g")
     val week_cumulative_time_z = sc.longAccumulator("week_cumulative_time_z")
+    // 周:统计科目下的正确数量
+    val week_correct_num_x = sc.longAccumulator("week_correct_num_x")
+    val week_correct_num_g = sc.longAccumulator("week_correct_num_g")
+    val week_correct_num_z = sc.longAccumulator("week_correct_num_z")
 
     val predicted_score_rdd = predicted_score.rdd
 
@@ -228,14 +239,17 @@ object AbilityAssessment {
             ts_userCount_x.add(1)
             ts_questionCount_x.add(predictedScore(1).toLong)
             ts_cumulative_time_x.add(predictedScore(2).toLong)
+            ts_correct_num_x.add(predictedScore(7).toLong)
           } else if (subject == 2) {
             ts_userCount_g.add(1)
             ts_questionCount_g.add(predictedScore(1).toLong)
             ts_cumulative_time_g.add(predictedScore(2).toLong)
+            ts_correct_num_g.add(predictedScore(7).toLong)
           } else if (subject == 3) {
             ts_userCount_z.add(1)
             ts_questionCount_z.add(predictedScore(1).toLong)
             ts_cumulative_time_z.add(predictedScore(2).toLong)
+            ts_correct_num_z.add(predictedScore(7).toLong)
           }
 
           arr += TS_AbilityAssessment(
@@ -245,7 +259,8 @@ object AbilityAssessment {
             predictedScore(1).toLong, //do_exercise_num
             predictedScore(2).toLong, //cumulative_time
             predictedScore(4).toLong, //do_exercise_day
-            subject
+            subject,
+            predictedScore(7).toLong  //total_correct_num
           )
         }
         arr.iterator
@@ -278,14 +293,17 @@ object AbilityAssessment {
             week_userCount_x.add(1)
             week_questionCount_x.add(predictedScore(1).toLong)
             week_cumulative_time_x.add(predictedScore(2).toLong)
+            week_correct_num_x.add(predictedScore(8).toLong)
           } else if (subject == 2) {
             week_userCount_g.add(1)
             week_questionCount_g.add(predictedScore(1).toLong)
             week_cumulative_time_g.add(predictedScore(2).toLong)
+            week_correct_num_g.add(predictedScore(8).toLong)
           } else if (subject == 3) {
             week_userCount_z.add(1)
             week_questionCount_z.add(predictedScore(1).toLong)
             week_cumulative_time_z.add(predictedScore(2).toLong)
+            week_correct_num_z.add(predictedScore(8).toLong)
           }
 
 
@@ -295,7 +313,8 @@ object AbilityAssessment {
             predictedScore(3), // week_predict_score
             subject,
             predictedScore(5).toLong,
-            predictedScore(6).toLong
+            predictedScore(6).toLong,
+            predictedScore(8).toLong
           )
         }
         arr.iterator
@@ -331,7 +350,7 @@ object AbilityAssessment {
     week_hbaseConf.set("hbase.zookeeper.property.clientPort", "2181")
     week_hbaseConf.set("hbase.rootdir", "/hbase")
     week_hbaseConf.set("hbase.client.retries.number", "3")
-    week_hbaseConf.set("hbase.rpc.timeout", "2000")
+    week_hbaseConf.set("hbase.rpc.timeout", "200000")
     week_hbaseConf.set("hbase.client.operation.timeout", "30")
     week_hbaseConf.set("hbase.client.scanner.timeout.period", "100")
     val week_jobConf = new JobConf(week_hbaseConf)
@@ -368,15 +387,18 @@ object AbilityAssessment {
           if (subject == 1) {
             put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("week_userCount"), Bytes.toBytes(week_unum_x.value))
             put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("week_questionCount"), Bytes.toBytes(week_qnum_x.value))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("week_cumulative_time"), Bytes.toBytes(week_tnum_x.value))
+            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("week_cumulative_timeTotal"), Bytes.toBytes(week_tnum_x.value))
+            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("week_correct_num"), Bytes.toBytes(week_correct_num_x.value))
           } else if (subject == 2) {
             put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("week_userCount"), Bytes.toBytes(week_unum_g.value))
             put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("week_questionCount"), Bytes.toBytes(week_qnum_g.value))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("week_cumulative_time"), Bytes.toBytes(week_tnum_g.value))
+            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("week_cumulative_timeTotal"), Bytes.toBytes(week_tnum_g.value))
+            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("week_correct_num"), Bytes.toBytes(week_correct_num_g.value))
           } else if (subject == 3) {
             put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("week_userCount"), Bytes.toBytes(week_unum_z.value))
             put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("week_questionCount"), Bytes.toBytes(week_qnum_z.value))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("week_cumulative_time"), Bytes.toBytes(week_tnum_z.value))
+            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("week_cumulative_timeTotal"), Bytes.toBytes(week_tnum_z.value))
+            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("week_correct_num"), Bytes.toBytes(week_correct_num_z.value))
           }
 
           buffer += new Tuple2(new ImmutableBytesWritable, put)
@@ -405,7 +427,7 @@ object AbilityAssessment {
     hbaseConf.set("hbase.zookeeper.property.clientPort", "2181")
     hbaseConf.set("hbase.rootdir", "/hbase")
     hbaseConf.set("hbase.client.retries.number", "3")
-    hbaseConf.set("hbase.rpc.timeout", "2000")
+    hbaseConf.set("hbase.rpc.timeout", "200000")
     hbaseConf.set("hbase.client.operation.timeout", "30")
     hbaseConf.set("hbase.client.scanner.timeout.period", "100")
 
@@ -445,14 +467,15 @@ object AbilityAssessment {
             put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("ts_userCount"), Bytes.toBytes(ts_unum_x.value))
             put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("ts_questionCount"), Bytes.toBytes(ts_qnum_x.value))
             put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("ts_cumulative_time"), Bytes.toBytes(ts_tnum_x.value))
+            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("total_correct_num"), Bytes.toBytes(ts_correct_num_x.value))
           } else if (subject == 2) {
             put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("ts_userCount"), Bytes.toBytes(ts_unum_g.value))
             put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("ts_questionCount"), Bytes.toBytes(ts_qnum_g.value))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("ts_cumulative_time"), Bytes.toBytes(ts_tnum_g.value))
+            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("total_correct_num"), Bytes.toBytes(ts_correct_num_g.value))
           } else if (subject == 3) {
             put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("ts_userCount"), Bytes.toBytes(ts_unum_z.value))
             put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("ts_questionCount"), Bytes.toBytes(ts_qnum_z.value))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("ts_cumulative_time"), Bytes.toBytes(ts_tnum_z.value))
+            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("total_correct_num"), Bytes.toBytes(ts_correct_num_z.value))
           }
 
           buffer += new Tuple2(new ImmutableBytesWritable, put)

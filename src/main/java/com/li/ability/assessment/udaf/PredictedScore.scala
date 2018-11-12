@@ -32,7 +32,9 @@ class PredictedScore extends UserDefinedAggregateFunction {
       StructField("createTime", LongType, true),
       StructField("do_exercise_day", ArrayType(StringType), true),
       StructField("week_do_exercise_num", ArrayType(IntegerType), true),
-      StructField("week_cumulative_time", IntegerType, true)
+      StructField("week_cumulative_time", IntegerType, true),
+      StructField("total_correct_num", LongType, true),
+      StructField("week_correct_num", LongType, true)
     ))
   }
 
@@ -61,6 +63,10 @@ class PredictedScore extends UserDefinedAggregateFunction {
     buffer.update(6, Array())
     // week_cumulative_time
     buffer.update(7, 0)
+    // total_correct_num
+    buffer.update(8, 0L)
+    // week_correct_num
+    buffer.update(9, 0L)
 
   }
 
@@ -70,6 +76,10 @@ class PredictedScore extends UserDefinedAggregateFunction {
     val corrects: scala.Seq[Int] = input.getSeq[Int](0)
     val points: scala.Seq[Int] = input.getSeq[Int](3)
     val times: scala.Seq[Int] = input.getSeq[Int](2)
+
+
+    var total_correct_num = buffer.get(8).asInstanceOf[Long].longValue()
+
 
     // 记录本次update 知识点下的正确树立
     var mutmap = Map[Int, (Int, Int, Int)]()
@@ -83,6 +93,7 @@ class PredictedScore extends UserDefinedAggregateFunction {
           val total = t._2 + 1
           val tim = t._3 + f._2
           mutmap += (f._1._1 -> (correct, total, tim))
+
         } else {
           val correct = t._1
           val total = t._2 + 1
@@ -113,7 +124,7 @@ class PredictedScore extends UserDefinedAggregateFunction {
       val buffer_total = bufferMap.getOrElse(f._1, (0, 0, 0))._2
       val buffer_time = bufferMap.getOrElse(f._1, (0, 0, 0))._3
 
-
+      total_correct_num += buffer_correct + correct
       bufferMap += (point -> (buffer_correct + correct, buffer_total + total, buffer_time + time))
     }
     val upd = bufferMap.mkString("_")
@@ -125,6 +136,7 @@ class PredictedScore extends UserDefinedAggregateFunction {
     buffer.update(
       0, upd
     )
+    buffer.update(8, total_correct_num)
 
     // 做题数量
     val questions = input.getSeq[Int](1)
@@ -155,13 +167,41 @@ class PredictedScore extends UserDefinedAggregateFunction {
     val week_start: Long = TimeUtils.getWeekStartTimeStamp()
     val week_end: Long = TimeUtils.getWeekEndTimeStamp()
 
-    println(buffer.get(6).getClass.getName)
-    println(buffer.get(7).getClass.getName)
+    var week_correct_num = buffer.get(9).asInstanceOf[Long].longValue()
     if (week_start <= createTime && createTime < week_end) {
+
       // mutmap 是本次输入
-      val week_predicted_score = PredictedScore.weekPredictedScore(mutmap, PredictedScore.getTSPredictScore2Map(buffer.getAs[String](3)))
+
+      val week_buffer_map = PredictedScore.getTSPredictScore2Map(buffer.getAs[String](3))
+
+      mutmap.foreach { f =>
+        val point = f._1
+        val correct = f._2._1
+        val total = f._2._2
+        val tim = f._2._3
+
+        val buffer_correct = week_buffer_map.getOrElse(f._1, (0, 0, 0))._1
+        val buffer_total = week_buffer_map.getOrElse(f._1, (0, 0, 0))._2
+        val buffer_time = week_buffer_map.getOrElse(f._1, (0, 0, 0))._3
+
+
+        week_buffer_map += (point -> (buffer_correct + correct, buffer_total + total, buffer_time + tim))
+
+        week_correct_num += buffer_correct + correct
+      }
+
+      val week_predicted_score = week_buffer_map.mkString("_")
+        .replaceAll(" ", "")
+        .replaceAll("->\\(", ":")
+        .replaceAll("\\)", "")
+        .replaceAll(",", ":")
+
+      //      val week_predicted_score = PredictedScore.weekPredictedScore(mutmap, PredictedScore.getTSPredictScore2Map(buffer.getAs[String](3)))
       //week_predict_score
       buffer.update(3, week_predicted_score)
+
+
+      buffer.update(9, week_correct_num)
 
       val weekQuestionSet = Set[Int]()
       buffer.getAs[Seq[Int]](6).foreach(weekQuestionSet += _)
@@ -183,6 +223,7 @@ class PredictedScore extends UserDefinedAggregateFunction {
       buffer.update(3, buffer.getAs[String](3))
       buffer.update(6, buffer.getAs[Seq[Int]](6))
       buffer.update(7, buffer.getAs[Int](7))
+      buffer.update(9, buffer.getAs[Long](9))
     }
 
     val daySet = Set[String]()
@@ -242,6 +283,9 @@ class PredictedScore extends UserDefinedAggregateFunction {
       weekQuestionSet += f
     )
     aggreBuffer.update(7, row.get(7).asInstanceOf[Int].intValue() + aggreBuffer.get(7).asInstanceOf[Int].intValue())
+
+    aggreBuffer.update(8, row.get(8).asInstanceOf[Long].longValue() + aggreBuffer.get(8).asInstanceOf[Long].longValue())
+    aggreBuffer.update(9, row.get(9).asInstanceOf[Long].longValue() + aggreBuffer.get(9).asInstanceOf[Long].longValue())
   }
 
   override def evaluate(buffer: Row): Any = {
@@ -254,6 +298,9 @@ class PredictedScore extends UserDefinedAggregateFunction {
 
     val week_do_exercise_num = buffer.getAs[collection.mutable.Set[Int]](6).size
     val week_cumulative_time = buffer.get(7).asInstanceOf[Int].intValue()
+
+    val total_correct_num = buffer.get(8).asInstanceOf[Long].longValue()
+    val week_correct_num = buffer.get(9).asInstanceOf[Long].longValue()
     Array(
       total_station_predict_score.replaceAll("-1:0:0:0_", ""),
       do_exercise_num.toString,
@@ -261,7 +308,9 @@ class PredictedScore extends UserDefinedAggregateFunction {
       week_predict_score.toString,
       do_exercise_day.toString,
       week_do_exercise_num.toString,
-      week_cumulative_time.toString
+      week_cumulative_time.toString,
+      total_correct_num.toString,
+      week_correct_num.toString
     )
   }
 }
