@@ -102,9 +102,9 @@ public class HBaseUtil {
 
         HBaseAdmin admin = new HBaseAdmin(conf);
 
-        HTableDescriptor table = new HTableDescriptor("week_ability_assessment");
+        HTableDescriptor table = new HTableDescriptor("videoplay");
 
-        HColumnDescriptor columnFamily = new HColumnDescriptor("ability_assessment_info");
+        HColumnDescriptor columnFamily = new HColumnDescriptor("playinfo");
         columnFamily.setMaxVersions(10);
         table.addFamily(columnFamily);
 

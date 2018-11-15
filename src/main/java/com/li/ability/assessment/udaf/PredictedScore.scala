@@ -219,7 +219,8 @@ class PredictedScore extends UserDefinedAggregateFunction {
       //cumulative_time
       buffer.update(7, weekCumulativeTime)
 
-    } else {
+    }
+    else {
       buffer.update(3, buffer.getAs[String](3))
       buffer.update(6, buffer.getAs[Seq[Int]](6))
       buffer.update(7, buffer.getAs[Int](7))
@@ -282,6 +283,8 @@ class PredictedScore extends UserDefinedAggregateFunction {
     weekQuestions.foreach(f =>
       weekQuestionSet += f
     )
+
+    aggreBuffer.update(6, weekQuestionSet.toSeq)
     aggreBuffer.update(7, row.get(7).asInstanceOf[Int].intValue() + aggreBuffer.get(7).asInstanceOf[Int].intValue())
 
     aggreBuffer.update(8, row.get(8).asInstanceOf[Long].longValue() + aggreBuffer.get(8).asInstanceOf[Long].longValue())
@@ -451,8 +454,8 @@ object PredictedScore {
 
   def main(args: Array[String]): Unit = {
 
-    //    println(getScore("3125:34:79:1805_3280:9:24:552_3298:5:23:402_3250:3:15:324_642:18:88:3580_435:35:117:4941_3195:2:12:389_3332:6:26:486_392:58:159:6079_482:7:34:1422_754:11:72:4198_0:0:2:92",
-    //      2))
+    println(getScore("-1:0:0:0_642:79:80:269_435:76:80:277_482:30:30:71_392:38:41:96_754:37:39:127",
+      1))
     //
     val a: Long = 267L
     println(a.toString)
