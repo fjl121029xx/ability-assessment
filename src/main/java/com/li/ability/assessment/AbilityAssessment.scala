@@ -121,7 +121,7 @@ object AbilityAssessment {
     val zac_df = sparkSession.sql("select userId,corrects,paper.questions,times,createTime,subject from ztk" +
       "_answer_card")
 
-    zac_df.show(2000)
+//    zac_df.show(2000)
 
     val card = zac_df
       .repartition(1000)
@@ -162,14 +162,14 @@ object AbilityAssessment {
         arr.iterator
       }
       .toDF()
-    card.show(1000)
+//    card.show(1000)
 
     // val total_station = mongo.select("userId", "subject", "catgory", "expendTime", "createTime", "corrects", "paper.questions", "paper.modules", "StringCount")
     card.createOrReplaceTempView("answer_card")
     sparkSession.udf.register("predictedScore", new PredictedScore)
     val predicted_score = sparkSession.sql("select userId,predictedScore(corrects,questions,times,points,createTime) predictedScore,subject from answer_card group by userId,subject")
 
-    predicted_score.show(3000)
+//    predicted_score.show(3000)
     //    predicted_score.rdd.saveAsTextFile("ability-assessment/result_a/")
     // 累加器
     /**
@@ -270,9 +270,9 @@ object AbilityAssessment {
       "Row_Number() OVER(partition by subject order by do_exercise_num desc) rank4  " +
       "from ts_predicted_score_df")
 
-    ts.show(5000)
+//    ts.show(5000)
 
-    val tsTop10 = ts.where("rank4 <= 10")
+    val tsTop10 = ts.where("subject == 1").where("rank4 <= 10")
     tsTop10.show(10)
 
 
@@ -301,15 +301,15 @@ object AbilityAssessment {
             ac_zhice_week_time_total.add(predictedScore(2).toLong)
             ac_zhice_week_correct_num.add(predictedScore(8).toLong)
           }
-        /*  userId: Long,
-          week_grade: Double,
-          week_predict_score: String,
-          subject: Int,
-          week_do_exercise_num: Long,
-          week_cumulative_time: Long,
-          week_correct_num: Long,
-          week_speek: Double,
-          week_accuracy: Double*/
+          /*  userId: Long,
+            week_grade: Double,
+            week_predict_score: String,
+            subject: Int,
+            week_do_exercise_num: Long,
+            week_cumulative_time: Long,
+            week_correct_num: Long,
+            week_speek: Double,
+            week_accuracy: Double*/
 
           arr += Week_AbilityAssessment(
             userId, //userId
@@ -341,10 +341,10 @@ object AbilityAssessment {
       "week_speek," +
       "week_accuracy " +
       "from week_predicted_score_df  ")
-    week.show(5000)
+//    week.show(5000)
 
     val weekTop10 = week.where("rank <= 10")
-    weekTop10.show(10)
+//    weekTop10.show(10)
 
 
     val week_top10_hbaseConf = HBaseConfiguration.create()
