@@ -41,7 +41,10 @@ case class Week_AbilityAssessment(userId: Long,
                                   subject: Int,
                                   week_do_exercise_num: Long,
                                   week_cumulative_time: Long,
-                                  week_correct_num: Long
+                                  week_correct_num: Long,
+                                  week_speek: Double,
+                                  week_accuracy: Double
+
                                  )
 
 object AbilityAssessment {
@@ -298,7 +301,15 @@ object AbilityAssessment {
             ac_zhice_week_time_total.add(predictedScore(2).toLong)
             ac_zhice_week_correct_num.add(predictedScore(8).toLong)
           }
-
+        /*  userId: Long,
+          week_grade: Double,
+          week_predict_score: String,
+          subject: Int,
+          week_do_exercise_num: Long,
+          week_cumulative_time: Long,
+          week_correct_num: Long,
+          week_speek: Double,
+          week_accuracy: Double*/
 
           arr += Week_AbilityAssessment(
             userId, //userId
@@ -307,7 +318,9 @@ object AbilityAssessment {
             subject,
             predictedScore(5).toLong,
             predictedScore(6).toLong,
-            predictedScore(8).toLong
+            predictedScore(8).toLong,
+            predictedScore(6).toLong * 1.0 / predictedScore(5).toLong,
+            predictedScore(8).toLong * 1.0 / predictedScore(5).toLong
           )
         }
         arr.iterator
@@ -321,13 +334,17 @@ object AbilityAssessment {
       "subject," +
       "Row_Number() OVER(partition by subject order by week_grade desc) rank, " +
       "week_do_exercise_num," +
-      "week_cumulative_time " +
+      "week_cumulative_time," +
+      "Row_Number() OVER(partition by subject order by week_do_exercise_num desc) rank2," +
+      "Row_Number() OVER(partition by subject order by week_speek desc) rank3," +
+      "Row_Number() OVER(partition by subject order by week_accuracy desc) rank4," +
+      "week_speek," +
+      "week_accuracy " +
       "from week_predicted_score_df  ")
     week.show(5000)
 
     val weekTop10 = week.where("rank <= 10")
     weekTop10.show(10)
-
 
 
     val week_top10_hbaseConf = HBaseConfiguration.create()
@@ -370,8 +387,6 @@ object AbilityAssessment {
           put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("exerciseTime"), Bytes.toBytes(exerciseTime.toString))
 
 
-
-
           buffer += new Tuple2(new ImmutableBytesWritable, put)
           //            lis =  +: lis
         }
@@ -379,7 +394,6 @@ object AbilityAssessment {
     }
 
     week_top10_hbasePar.saveAsHadoopDataset(week_top10_jobConf)
-
 
 
     val xingce_week_user_count = sc.broadcast(ac_xingce_week_user_count.value.toString)
@@ -508,6 +522,7 @@ object AbilityAssessment {
           val rank = t.get(7).asInstanceOf[Int].intValue()
           val rank2 = t.get(8).asInstanceOf[Int].intValue()
           val rank3 = t.get(9).asInstanceOf[Int].intValue()
+          val rank4 = t.get(10).asInstanceOf[Int].intValue()
 
 
           val put = new Put(Bytes.toBytes(userId.toString + "-" + subject)) //行健的值
@@ -520,6 +535,7 @@ object AbilityAssessment {
           put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("rank"), Bytes.toBytes(rank.toString))
           put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("rank2"), Bytes.toBytes(rank2.toString))
           put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("rank3"), Bytes.toBytes(rank3.toString))
+          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("rank4"), Bytes.toBytes(rank3.toString))
 
 
           if (subject == 1) {
