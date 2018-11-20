@@ -441,6 +441,12 @@ object AbilityAssessment {
           val rank = t.get(4).asInstanceOf[Int].intValue()
           val exerciseNum = t.get(5).asInstanceOf[Long].longValue()
           val exerciseTime = t.get(6).asInstanceOf[Long].longValue()
+          val rank2 = t.get(7).asInstanceOf[Int].intValue()
+          val rank3 = t.get(8).asInstanceOf[Int].intValue()
+          val rank4 = t.get(9).asInstanceOf[Int].intValue()
+          val week_speek = t.get(10).asInstanceOf[Double].doubleValue()
+          val week_accuracy = t.get(11).asInstanceOf[Double].doubleValue()
+
 
           val put = new Put(Bytes.toBytes(userId + "-" + subject + "-" + TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis(), "yyyy-w"))) //行健的值
           put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("grade"), Bytes.toBytes(grade.toString))
@@ -449,6 +455,11 @@ object AbilityAssessment {
           put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("rank"), Bytes.toBytes(rank.toString))
           put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("exerciseNum"), Bytes.toBytes(exerciseNum.toString))
           put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("exerciseTime"), Bytes.toBytes(exerciseTime.toString))
+          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("rank2"), Bytes.toBytes(rank2.toString))
+          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("rank3"), Bytes.toBytes(rank3.toString))
+          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("rank4"), Bytes.toBytes(rank4.toString))
+          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("week_speek"), Bytes.toBytes(week_speek.toString))
+          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("week_accuracy"), Bytes.toBytes(week_accuracy.toString))
 
 
           if (subject == 1) {

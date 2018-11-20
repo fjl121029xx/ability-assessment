@@ -388,14 +388,14 @@ object PredictedScore {
     var map = getTSPredictScore2Map(grade)
     _type match {
       case 1 => {
-        var score: Double = 0.0
-        var changshi = map.getOrElse(392, (0, 0, 0))._1 * 1.0 / map.getOrElse(392, (0, 1, 0))._2 * 1.0
-        var yanyu = map.getOrElse(435, (0, 0, 0))._1 * 1.0 / map.getOrElse(435, (0, 1, 0))._2 * 1.0
-        var shuliang = map.getOrElse(482, (0, 0, 0))._1 * 1.0 / map.getOrElse(482, (0, 1, 0))._2 * 1.0
-        var panduan = map.getOrElse(642, (0, 0, 0))._1 * 1.0 / map.getOrElse(642, (0, 1, 0))._2 * 1.0
-        var ziliao = map.getOrElse(754, (0, 0, 0))._1 * 1.0 / map.getOrElse(754, (0, 1, 0))._2 * 1.0
+     var score: Double = 0.0
+        val changshi = map.getOrElse(392, (0, 0, 0))._1 * 1.0 / map.getOrElse(392, (0, 1, 0))._2 * 1.0
+        val yanyu = map.getOrElse(435, (0, 0, 0))._1 * 1.0 / map.getOrElse(435, (0, 1, 0))._2 * 1.0
+        val shuliang = map.getOrElse(482, (0, 0, 0))._1 * 1.0 / map.getOrElse(482, (0, 1, 0))._2 * 1.0
+        val panduan = map.getOrElse(642, (0, 0, 0))._1 * 1.0 / map.getOrElse(642, (0, 1, 0))._2 * 1.0
+        val ziliao = map.getOrElse(754, (0, 0, 0))._1 * 1.0 / map.getOrElse(754, (0, 1, 0))._2 * 1.0
 
-        score += (25.0 / 135.0) * changshi * 100 +
+        score += (20.0 / 135.0) * changshi * 100 +
           (40.0 / 135.0) * yanyu * 100 +
           (15.0 / 135.0) * shuliang * 100 +
           (40.0 / 135.0) * panduan * 100 +
@@ -454,7 +454,7 @@ object PredictedScore {
 
   def main(args: Array[String]): Unit = {
 
-    println(getScore("-1:0:0:0_642:79:80:269_435:76:80:277_482:30:30:71_392:38:41:96_754:37:39:127",
+    println(getScore("-1:0:0:0_642:40:40:820_435:40:40:676_482:9:10:687_392:19:20:142_754:18:20:1113",
       1))
     //
     val a: Long = 267L
