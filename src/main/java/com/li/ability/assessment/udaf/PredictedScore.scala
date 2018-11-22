@@ -1,5 +1,7 @@
 package com.li.ability.assessment.udaf
 
+import java.text.SimpleDateFormat
+
 import com.li.ability.assessment.TimeUtils
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.expressions.{MutableAggregationBuffer, UserDefinedAggregateFunction}
@@ -14,11 +16,11 @@ class PredictedScore extends UserDefinedAggregateFunction {
   override def inputSchema: StructType = {
 
     StructType(Array(
-      StructField(" corrects", ArrayType(IntegerType), true),
-      StructField(" questions", ArrayType(IntegerType), true),
-      StructField(" times", ArrayType(IntegerType), true),
-      StructField(" points", ArrayType(IntegerType), true),
-      StructField(" createTime", StringType, true)
+      StructField("corrects", ArrayType(IntegerType), true),
+      StructField("questions", ArrayType(IntegerType), true),
+      StructField("times", ArrayType(IntegerType), true),
+      StructField("points", ArrayType(IntegerType), true),
+      StructField("createTime", StringType, true)
     ))
   }
 
@@ -72,6 +74,8 @@ class PredictedScore extends UserDefinedAggregateFunction {
 
 
   override def update(buffer: MutableAggregationBuffer, input: Row): Unit = {
+
+    val format = new SimpleDateFormat("yyyy-MM-dd")
 
     val corrects: scala.Seq[Int] = input.getSeq[Int](0)
     val points: scala.Seq[Int] = input.getSeq[Int](3)
@@ -161,7 +165,11 @@ class PredictedScore extends UserDefinedAggregateFunction {
     val createTime = input.get(4).getClass.getName match {
       case "java.lang.Integer" => input.get(4).asInstanceOf[Int].intValue()
       case "java.lang.Long" => input.get(4).asInstanceOf[Long].longValue()
-      case "java.lang.String" => input.get(4).asInstanceOf[String].toLong
+      case "java.lang.String" => {
+
+        val createTime = input.get(4).asInstanceOf[String].toString
+        format.parse(createTime).getTime
+      }
     }
 
     val week_start: Long = TimeUtils.getWeekStartTimeStamp()
@@ -388,7 +396,7 @@ object PredictedScore {
     var map = getTSPredictScore2Map(grade)
     _type match {
       case 1 => {
-     var score: Double = 0.0
+        var score: Double = 0.0
         val changshi = map.getOrElse(392, (0, 0, 0))._1 * 1.0 / map.getOrElse(392, (0, 1, 0))._2 * 1.0
         val yanyu = map.getOrElse(435, (0, 0, 0))._1 * 1.0 / map.getOrElse(435, (0, 1, 0))._2 * 1.0
         val shuliang = map.getOrElse(482, (0, 0, 0))._1 * 1.0 / map.getOrElse(482, (0, 1, 0))._2 * 1.0
