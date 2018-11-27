@@ -403,12 +403,23 @@ object PredictedScore {
         val panduan = map.getOrElse(642, (0, 0, 0))._1 * 1.0 / map.getOrElse(642, (0, 1, 0))._2 * 1.0
         val ziliao = map.getOrElse(754, (0, 0, 0))._1 * 1.0 / map.getOrElse(754, (0, 1, 0))._2 * 1.0
 
-        score += (20.0 / 135.0) * changshi * 100 +
-          (40.0 / 135.0) * yanyu * 100 +
-          (15.0 / 135.0) * shuliang * 100 +
-          (40.0 / 135.0) * panduan * 100 +
-          (20.0 / 135.0) * ziliao * 100
-        defaultScore = score
+
+        val Num = map.getOrElse(392, (0, 1, 0))._2 +
+          map.getOrElse(435, (0, 1, 0))._2 +
+          map.getOrElse(482, (0, 1, 0))._2 +
+          map.getOrElse(642, (0, 1, 0))._2 +
+          map.getOrElse(754, (0, 1, 0))._2
+
+        if (Num < 150) {
+          defaultScore = 0
+        } else {
+          score += (20.0 / 135.0) * changshi * 100 +
+            (40.0 / 135.0) * yanyu * 100 +
+            (15.0 / 135.0) * shuliang * 100 +
+            (40.0 / 135.0) * panduan * 100 +
+            (20.0 / 135.0) * ziliao * 100
+          defaultScore = score
+        }
       }
       case 2 => {
         var score: Double = 0.0
@@ -427,8 +438,13 @@ object PredictedScore {
           map.getOrElse(3298, (0, 1, 0))._2 * 1.0 +
           map.getOrElse(3332, (0, 1, 0))._2 * 1.0
 
-        score += correctNum / Num
-        defaultScore = score * 100
+        if (Num < 150) {
+          defaultScore = 0
+        } else {
+          score += correctNum / Num
+          defaultScore = score * 100
+        }
+
       }
       case 3 => {
         var score: Double = 0.0
@@ -449,8 +465,36 @@ object PredictedScore {
           map.getOrElse(36846, (0, 1, 0))._2 * 1.0 +
           map.getOrElse(36831, (0, 1, 0))._2 * 1.0
 
-        score += correctNum / Num
-        defaultScore = score * 100
+        if (Num < 150) {
+          defaultScore = 0
+        } else {
+          score += correctNum / Num
+          defaultScore = score * 100
+        }
+      }
+      case 100100175 => {
+        var score: Double = 0.0
+
+        var correctNum = map.getOrElse(36667, (0, 0, 0))._1 * 1.0 +
+          map.getOrElse(37098, (0, 0, 0))._1 * 1.0 +
+          map.getOrElse(37099, (0, 0, 0))._1 * 1.0 +
+          map.getOrElse(37100, (0, 0, 0))._1 * 1.0 +
+          map.getOrElse(37101, (0, 0, 0))._1 * 1.0 +
+          map.getOrElse(37175, (0, 0, 0))._1 * 1.0
+
+        var Num = map.getOrElse(36667, (0, 1, 0))._2 * 1.0 +
+          map.getOrElse(37098, (0, 1, 0))._2 * 1.0 +
+          map.getOrElse(37099, (0, 1, 0))._2 * 1.0 +
+          map.getOrElse(37100, (0, 1, 0))._2 * 1.0 +
+          map.getOrElse(37101, (0, 1, 0))._2 * 1.0 +
+          map.getOrElse(37175, (0, 1, 0))._2 * 1.0
+
+        if (Num < 150) {
+          defaultScore = 0
+        } else {
+          score += correctNum / Num
+          defaultScore = score * 100
+        }
       }
       case _ => {
         defaultScore
