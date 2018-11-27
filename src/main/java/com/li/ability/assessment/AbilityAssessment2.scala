@@ -5,6 +5,7 @@ import java.text.SimpleDateFormat
 
 import com.li.ability.assessment.udaf.PredictedScore
 import com.li.ability.assessment.udaf.PredictedScore.getTSPredictScore2Map
+import com.li.ability.assessment.utils.SubjectAccumulator
 import org.apache.spark.{SparkConf, SparkContext}
 import com.mongodb.spark.config.ReadConfig
 import org.apache.hadoop.hbase.HBaseConfiguration
@@ -30,7 +31,7 @@ object AbilityAssessment2 {
 
     val conf = new SparkConf()
       .setAppName("AbilityAssessment2")
-//      .setMaster("local[3]")
+      //      .setMaster("local[3]")
       .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
       .registerKryoClasses(Array(classOf[scala.collection.mutable.WrappedArray.ofRef[_]], classOf[AnswerCard]))
 
@@ -45,12 +46,12 @@ object AbilityAssessment2 {
 
     import sparkSession.implicits._
 
-//    val ztk_answer_card2 = sparkSession.sql("select userId,correct,question,answerTime,point,createTime,subject from ztk_answer_card")
-//
-//    ztk_answer_card2.show()
-//
-//    ztk_answer_card2.coalesce(300)
-//      .createOrReplaceTempView("spark_ztk_answer_card")
+    //    val ztk_answer_card2 = sparkSession.sql("select userId,correct,question,answerTime,point,createTime,subject from ztk_answer_card")
+    //
+    //    ztk_answer_card2.show()
+    //
+    //    ztk_answer_card2.coalesce(300)
+    //      .createOrReplaceTempView("spark_ztk_answer_card")
 
     sparkSession.udf.register("predictedScore", new PredictedScore)
     val predicted_score = sparkSession.sql("select userId,predictedScore(correct,question,answerTime,point,createTime) predictedScore,subject from ztk_answer_card  where createTime = '2018-11-20' group by userId,subject")
@@ -62,42 +63,79 @@ object AbilityAssessment2 {
     /**
       * 全站
       */
-    // 统计科目下的用户数量
-    val ac_xingce_all_user_count = sc.longAccumulator("ac_xingce_all_user_count")
-    val ac_gongji_all_user_count = sc.longAccumulator("ac_gongji_all_user_count")
-    val ac_zhice_all_user_count = sc.longAccumulator("ac_zhice_all_user_count")
-    // 统计科目下的做题数量
-    val ac_xingce_all_ques_count = sc.longAccumulator("ac_xingce_all_ques_count")
-    val ac_gongji_all_ques_count = sc.longAccumulator("ac_gongji_all_ques_count")
-    val ac_zhice_all_ques_count = sc.longAccumulator("ac_zhice_all_ques_count")
-    // 统计科目下的做题时长
-    val ac_xingce_all_time_total = sc.longAccumulator("ac_xingce_all_time_total")
-    val ac_gongji_all_time_total = sc.longAccumulator("ac_gongji_all_time_total")
-    val ac_zhice_all_time_total = sc.longAccumulator("ac_zhice_all_time_total")
-    // 统计科目下的正确数量
-    val ac_xingce_all_correct_num = sc.longAccumulator("ac_xingce_all_correct_num")
-    val ac_gongji_all_correct_num = sc.longAccumulator("ac_gongji_all_correct_num")
-    val ac_zhice_all_correct_num = sc.longAccumulator("ac_zhice_all_correct_num")
+    //    // 统计科目下的用户数量
+    //    val xingCeUserCount = sc.longAccumulator("xingCeUserCount")
+    //    val gongJiUserCount = sc.longAccumulator("gongJiUserCount")
+    //    val zhiCeUserCount = sc.longAccumulator("zhiCeUserCount")
+    //    val gongAnUserCount = sc.longAccumulator("gongAnUserCount")
+    //    // 统计科目下的做题数量
+    //    val xingCeQuesCount = sc.longAccumulator("xingCeQuesCount")
+    //    val gongJiQuesCount = sc.longAccumulator("gongJiQuesCount")
+    //    val zhiCeQuesCount = sc.longAccumulator("zhiCeQuesCount")
+    //    val gongAnQuesCount = sc.longAccumulator("gongAnQuesCount")
+    //    // 统计科目下的做题时长
+    //    val xingCeTimeTotal = sc.longAccumulator("xingCeTimeTotal")
+    //    val gongJiTimeTotal = sc.longAccumulator("gongJiTimeTotal")
+    //    val zhiCeTimeTotal = sc.longAccumulator("zhiCeTimeTotal")
+    //    val gongAnTimeTotal = sc.longAccumulator("gongAnTimeTotal")
+    //    // 统计科目下的正确数量
+    //    val xingCeCorrectNum = sc.longAccumulator("xingCeCorrectNum")
+    //    val gongJiCorrectNum = sc.longAccumulator("gongJiCorrectNum")
+    //    val zhiCeCorrectNum = sc.longAccumulator("zhiCeCorrectNum")
+    //    val gongAnCorrectNum = sc.longAccumulator("gongAnCorrectNum")
+
+    val xingCe = new SubjectAccumulator
+    sc.register(xingCe, "xingCe")
+
+    val gongJi = new SubjectAccumulator
+    sc.register(gongJi, "gongJi")
+
+    val zhiCe = new SubjectAccumulator
+    sc.register(zhiCe, "zhiCe")
+
+    val gongAn = new SubjectAccumulator
+    sc.register(gongAn, "gongAn")
+
     /**
       * 周
       */
-    // 周:统计科目下的用户数量
-    val ac_xingce_week_user_count = sc.longAccumulator("ac_xingce_week_user_count")
-    val ac_gongji_week_user_count = sc.longAccumulator("ac_gongji_week_user_count")
-    val ac_zhice_week_user_count = sc.longAccumulator("ac_zhice_week_user_count")
+    //    // 周:统计科目下的用户数量
+    //    val xingCeWeekUserCount = sc.longAccumulator("xingCeWeekUserCount")
+    //    val gongJiWeekUserCount = sc.longAccumulator("gongJiWeekUserCount")
+    //    val zhiCeWeekUserCount = sc.longAccumulator("zhiCeWeekUserCount")
+    //    val gongAnWeekUserCount = sc.longAccumulator("gongAnWeekUserCount")
+    //
+    //
+    //    // 周:统计科目下的做题数量
+    //    val xingCeWeekQuesCount = sc.longAccumulator("xingCeWeekQuesCount")
+    //    val gongJiWeekQuesCount = sc.longAccumulator("gongJiWeekQuesCount")
+    //    val zhiCeWeekQuesCount = sc.longAccumulator("zhiCeWeekQuesCount")
+    //    val gongAnWeekQuesCount = sc.longAccumulator("gongAnWeekQuesCount")
+    //
+    //    // 周:统计科目下的做题时长
+    //    val xingCeWeekTimeTotal = sc.longAccumulator("xingCeWeekTimeTotal")
+    //    val gongJiWeekTimeTotal = sc.longAccumulator("gongJiWeekTimeTotal")
+    //    val zhiCeWeekTimeTotal = sc.longAccumulator("zhiCeWeekTimeTotal")
+    //    val gongAnWeekTimeTotal = sc.longAccumulator("gongAnWeekTimeTotal")
+    //
+    //    // 周:统计科目下的正确数量
+    //    val xingCeWeekCorrectNum = sc.longAccumulator("xingCeWeekCorrectNum")
+    //    val gongJiWeekCorrectNum = sc.longAccumulator("gongJiWeekCorrectNum")
+    //    val zhiCeWeekCorrectNum = sc.longAccumulator("zhiCeWeekCorrectNum")
+    //    val gongAnWeekCorrectNum = sc.longAccumulator("gongAnWeekCorrectNum")
 
-    // 周:统计科目下的做题数量
-    val ac_xingce_week_ques_count = sc.longAccumulator("ac_xingce_week_ques_count")
-    val ac_gongji_week_ques_count = sc.longAccumulator("ac_gongji_week_ques_count")
-    val ac_zhice_week_ques_count = sc.longAccumulator("ac_zhice_week_ques_count")
-    // 周:统计科目下的做题时长
-    val ac_xingce_week_time_total = sc.longAccumulator("ac_xingce_week_time_total")
-    val ac_gongji_week_time_total = sc.longAccumulator("ac_gongji_week_time_total")
-    val ac_zhice_week_time_total = sc.longAccumulator("ac_zhice_week_time_total")
-    // 周:统计科目下的正确数量
-    val ac_xingce_week_correct_num = sc.longAccumulator("ac_xingce_week_correct_num")
-    val ac_gongji_week_correct_num = sc.longAccumulator("ac_gongji_week_correct_num")
-    val ac_zhice_week_correct_num = sc.longAccumulator("ac_zhice_week_correct_num")
+
+    val xingCeWeek = new SubjectAccumulator
+    sc.register(xingCeWeek, "xingCeWeek")
+
+    val gongJiWeek = new SubjectAccumulator
+    sc.register(gongJiWeek, "gongJiWeek")
+
+    val zhiCeWeek = new SubjectAccumulator
+    sc.register(zhiCeWeek, "zhiCeWeek")
+
+    val gongAnWeek = new SubjectAccumulator
+    sc.register(gongAnWeek, "gongAnWeek")
 
     val predicted_score_rdd = predicted_score.rdd
 
@@ -112,20 +150,33 @@ object AbilityAssessment2 {
           val subject = n.get(2).asInstanceOf[Int].intValue()
 
           if (subject == 1) {
-            ac_xingce_all_user_count.add(1)
-            ac_xingce_all_ques_count.add(predictedScore(1).toLong)
-            ac_xingce_all_time_total.add(predictedScore(2).toLong)
-            ac_xingce_all_correct_num.add(predictedScore(7).toLong)
+
+            xingCe.add("1," + predictedScore(1) + "," + predictedScore(2) + "," + predictedScore(7))
+            //            xingCeUserCount.add(1)
+            //            xingCeQuesCount.add(predictedScore(1).toLong)
+            //            xingCeTimeTotal.add(predictedScore(2).toLong)
+            //            xingCeCorrectNum.add(predictedScore(7).toLong)
           } else if (subject == 2) {
-            ac_gongji_all_user_count.add(1)
-            ac_gongji_all_ques_count.add(predictedScore(1).toLong)
-            ac_gongji_all_time_total.add(predictedScore(2).toLong)
-            ac_gongji_all_correct_num.add(predictedScore(7).toLong)
+
+            gongJi.add("1," + predictedScore(1) + "," + predictedScore(2) + "," + predictedScore(7))
+            //            gongJiUserCount.add(1)
+            //            gongJiQuesCount.add(predictedScore(1).toLong)
+            //            gongJiTimeTotal.add(predictedScore(2).toLong)
+            //            gongJiCorrectNum.add(predictedScore(7).toLong)
           } else if (subject == 3) {
-            ac_zhice_all_user_count.add(1)
-            ac_zhice_all_ques_count.add(predictedScore(1).toLong)
-            ac_zhice_all_time_total.add(predictedScore(2).toLong)
-            ac_zhice_all_correct_num.add(predictedScore(7).toLong)
+
+            zhiCe.add("1," + predictedScore(1) + "," + predictedScore(2) + "," + predictedScore(7))
+            //            zhiCeUserCount.add(1)
+            //            zhiCeQuesCount.add(predictedScore(1).toLong)
+            //            zhiCeTimeTotal.add(predictedScore(2).toLong)
+            //            zhiCeCorrectNum.add(predictedScore(7).toLong)
+          } else if (subject == 100100175) {
+
+            gongAn.add("1," + predictedScore(1) + "," + predictedScore(2) + "," + predictedScore(7))
+            //            gongAnUserCount.add(1)
+            //            gongAnQuesCount.add(predictedScore(1).toLong)
+            //            gongAnTimeTotal.add(predictedScore(2).toLong)
+            //            gongAnCorrectNum.add(predictedScore(7).toLong)
           }
 
           arr += TS_AbilityAssessment(
@@ -174,21 +225,36 @@ object AbilityAssessment2 {
           val subject = n.get(2).asInstanceOf[Int].intValue()
 
           if (subject == 1) {
-            ac_xingce_week_user_count.add(1)
-            ac_xingce_week_ques_count.add(predictedScore(1).toLong)
-            ac_xingce_week_time_total.add(predictedScore(2).toLong)
-            ac_xingce_week_correct_num.add(predictedScore(8).toLong)
+
+            xingCeWeek.add("1," + predictedScore(5) + "," + predictedScore(6) + "," + predictedScore(8))
+            //            xingCeWeekUserCount.add(1)
+            //            xingCeWeekQuesCount.add(predictedScore(1).toLong)
+            //            xingCeWeekTimeTotal.add(predictedScore(2).toLong)
+            //            xingCeWeekCorrectNum.add(predictedScore(8).toLong)
           } else if (subject == 2) {
-            ac_gongji_week_user_count.add(1)
-            ac_gongji_week_ques_count.add(predictedScore(1).toLong)
-            ac_gongji_week_time_total.add(predictedScore(2).toLong)
-            ac_gongji_week_correct_num.add(predictedScore(8).toLong)
+
+            gongJiWeek.add("1," + predictedScore(5) + "," + predictedScore(6) + "," + predictedScore(8))
+            //            gongJiWeekUserCount.add(1)
+            //            gongJiWeekQuesCount.add(predictedScore(1).toLong)
+            //            gongJiWeekTimeTotal.add(predictedScore(2).toLong)
+            //            gongJiWeekCorrectNum.add(predictedScore(8).toLong)
           } else if (subject == 3) {
-            ac_zhice_week_user_count.add(1)
-            ac_zhice_week_ques_count.add(predictedScore(1).toLong)
-            ac_zhice_week_time_total.add(predictedScore(2).toLong)
-            ac_zhice_week_correct_num.add(predictedScore(8).toLong)
+
+            zhiCeWeek.add("1," + predictedScore(5) + "," + predictedScore(6) + "," + predictedScore(8))
+            //            zhiCeWeekUserCount.add(1)
+            //            zhiCeWeekQuesCount.add(predictedScore(1).toLong)
+            //            zhiCeWeekTimeTotal.add(predictedScore(2).toLong)
+            //            zhiCeWeekCorrectNum.add(predictedScore(8).toLong)
+          } else if (subject == 100100175) {
+
+            gongAnWeek.add("1," + predictedScore(5) + "," + predictedScore(6) + "," + predictedScore(8))
+            //            gongAnWeekUserCount.add(1)
+            //            gongAnWeekQuesCount.add(predictedScore(1).toLong)
+            //            gongAnWeekTimeTotal.add(predictedScore(2).toLong)
+            //            gongAnWeekCorrectNum.add(predictedScore(8).toLong)
           }
+
+
           /*  userId: Long,
             week_grade: Double,
             week_predict_score: String,
@@ -285,21 +351,36 @@ object AbilityAssessment2 {
     week_top10_hbasePar.saveAsHadoopDataset(week_top10_jobConf)
 
 
-    val xingce_week_user_count = sc.broadcast(ac_xingce_week_user_count.value.toString)
-    val xingce_week_ques_count = sc.broadcast(ac_xingce_week_ques_count.value.toString)
-    val xingce_week_time_total = sc.broadcast(ac_xingce_week_time_total.value.toString)
-    val xingce_week_correct_num = sc.broadcast(ac_xingce_week_correct_num.value.toString)
+    //    val _xingCeWeekUserCount = sc.broadcast(xingCeWeekUserCount.value.toString)
+    //    val _xingCeWeekQuesCount = sc.broadcast(xingCeWeekQuesCount.value.toString)
+    //    val _xingCeWeekTimeTotal = sc.broadcast(xingCeWeekTimeTotal.value.toString)
+    //    val _xingCeWeekCorrectNum = sc.broadcast(xingCeWeekCorrectNum.value.toString)
+    //
+    //    val _gongJiWeekUserCount = sc.broadcast(gongJiWeekUserCount.value.toString)
+    //    val _gongJiWeekQuesCount = sc.broadcast(gongJiWeekQuesCount.value.toString)
+    //    val _gongJiWeekTimeTotal = sc.broadcast(gongJiWeekTimeTotal.value.toString)
+    //    val _gongJiWeekCorrectNum = sc.broadcast(gongJiWeekCorrectNum.value.toString)
+    //
+    //    val _zhiCeWeekUserCount = sc.broadcast(zhiCeWeekUserCount.value.toString)
+    //    val _zhiCeWeekQuesCount = sc.broadcast(zhiCeWeekQuesCount.value.toString)
+    //    val _zhiCeWeekTimeTotal = sc.broadcast(zhiCeWeekTimeTotal.value.toString)
+    //    val _zhiCeWeekCorrectNum = sc.broadcast(zhiCeWeekCorrectNum.value.toString)
+    //
+    //    val _gongAnWeekUserCount = sc.broadcast(gongAnWeekUserCount.value.toString)
+    //    val _gongAnWeekQuesCount = sc.broadcast(gongAnWeekQuesCount.value.toString)
+    //    val _gongAnWeekTimeTotal = sc.broadcast(gongAnWeekTimeTotal.value.toString)
+    //    val _gongAnWeekCorrectNum = sc.broadcast(gongAnWeekCorrectNum.value.toString)
 
-    val gongji_week_user_count = sc.broadcast(ac_gongji_week_user_count.value.toString)
-    val gongji_week_ques_count = sc.broadcast(ac_gongji_week_ques_count.value.toString)
-    val gongji_week_time_total = sc.broadcast(ac_gongji_week_time_total.value.toString)
-    val gongji_week_correct_num = sc.broadcast(ac_gongji_week_correct_num.value.toString)
 
-    val zhice_week_user_count = sc.broadcast(ac_zhice_week_user_count.value.toString)
-    val zhice_week_ques_count = sc.broadcast(ac_zhice_week_ques_count.value.toString)
-    val zhice_week_time_total = sc.broadcast(ac_zhice_week_time_total.value.toString)
-    val zhice_week_correct_num = sc.broadcast(ac_zhice_week_correct_num.value.toString)
+    val _xingCe = sc.broadcast(xingCe.value)
+    val _gongJi = sc.broadcast(gongJi.value)
+    val _zhiCe = sc.broadcast(zhiCe.value)
+    val _gongAn = sc.broadcast(gongAn.value)
 
+    val _xingCeWeek = sc.broadcast(xingCeWeek.value)
+    val _gongJiWeek = sc.broadcast(gongJiWeek.value)
+    val _zhiCeWeek = sc.broadcast(zhiCeWeek.value)
+    val _gongAnWeek = sc.broadcast(gongAnWeek.value)
 
     val week_hbaseConf = HBaseConfiguration.create()
     week_hbaseConf.set("hbase.zookeeper.quorum", "192.168.100.68,192.168.100.70,192.168.100.72")
@@ -350,24 +431,21 @@ object AbilityAssessment2 {
           put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("week_speek"), Bytes.toBytes(week_speek.toString))
           put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("week_accuracy"), Bytes.toBytes(week_accuracy.toString))
 
-
+          var arr = Array("0", "0", "0", "0")
           if (subject == 1) {
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("userCount"), Bytes.toBytes(xingce_week_user_count.value))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("quesCount"), Bytes.toBytes(xingce_week_ques_count.value))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("timeTotal"), Bytes.toBytes(xingce_week_time_total.value))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("correctNum"), Bytes.toBytes(xingce_week_correct_num.value))
+            arr = _xingCeWeek.value.split(",")
           } else if (subject == 2) {
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("userCount"), Bytes.toBytes(gongji_week_user_count.value))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("quesCount"), Bytes.toBytes(gongji_week_ques_count.value))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("timeTotal"), Bytes.toBytes(gongji_week_time_total.value))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("correctNum"), Bytes.toBytes(gongji_week_correct_num.value))
+            arr = _gongJiWeek.value.split(",")
           } else if (subject == 3) {
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("userCount"), Bytes.toBytes(zhice_week_user_count.value))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("quesCount"), Bytes.toBytes(zhice_week_ques_count.value))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("timeTotal"), Bytes.toBytes(zhice_week_time_total.value))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("correctNum"), Bytes.toBytes(zhice_week_correct_num.value))
+            arr = _zhiCeWeek.value.split(",")
+          } else if (subject == 100100175) {
+            arr = _gongAnWeek.value.split(",")
           }
 
+          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("userCount"), Bytes.toBytes(arr(0)))
+          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("quesCount"), Bytes.toBytes(arr(1)))
+          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("timeTotal"), Bytes.toBytes(arr(2)))
+          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("correctNum"), Bytes.toBytes(arr(3)))
           buffer += new Tuple2(new ImmutableBytesWritable, put)
           //            lis =  +: lis
         }
@@ -376,21 +454,27 @@ object AbilityAssessment2 {
 
     week_hbasePar.saveAsHadoopDataset(week_jobConf)
 
+    //
+    //    val _xingCeUserCount = sc.broadcast(xingCeUserCount.value.toString)
+    //    val _xingCeQuesCount = sc.broadcast(xingCeQuesCount.value.toString)
+    //    val _xingCeTimeTotal = sc.broadcast(xingCeTimeTotal.value.toString)
+    //    val _xingCeCorrectNum = sc.broadcast(xingCeCorrectNum.value.toString)
+    //
+    //    val _gongJiUserCount = sc.broadcast(gongJiUserCount.value.toString)
+    //    val _gongJiQuesCount = sc.broadcast(gongJiQuesCount.value.toString)
+    //    val _gongJiTimeTotal = sc.broadcast(gongJiTimeTotal.value.toString)
+    //    val _gongJiCorrectNum = sc.broadcast(gongJiCorrectNum.value.toString)
+    //
+    //    val _zhiCeUserCount = sc.broadcast(zhiCeUserCount.value.toString)
+    //    val _zhiCeQuesCount = sc.broadcast(zhiCeQuesCount.value.toString)
+    //    val _zhiCeTimeTotal = sc.broadcast(zhiCeTimeTotal.value.toString)
+    //    val _zhiCeCorrectNum = sc.broadcast(zhiCeCorrectNum.value.toString)
+    //
+    //    val _gongAnUserCount = sc.broadcast(gongAnUserCount.value.toString)
+    //    val _gongAnQuesCount = sc.broadcast(gongAnQuesCount.value.toString)
+    //    val _gongAnTimeTotal = sc.broadcast(gongAnTimeTotal.value.toString)
+    //    val _gongAnCorrectNum = sc.broadcast(gongAnCorrectNum.value.toString)
 
-    val xingce_all_user_count = sc.broadcast(ac_xingce_all_user_count.value.toString)
-    val xingce_all_ques_count = sc.broadcast(ac_xingce_all_ques_count.value.toString)
-    val xingce_all_time_total = sc.broadcast(ac_xingce_all_time_total.value.toString)
-    val xingce_all_correct_num = sc.broadcast(ac_xingce_all_correct_num.value.toString)
-
-    val gongji_all_user_count = sc.broadcast(ac_gongji_all_user_count.value.toString)
-    val gongji_all_ques_count = sc.broadcast(ac_gongji_all_ques_count.value.toString)
-    val gongji_all_time_total = sc.broadcast(ac_gongji_all_time_total.value.toString)
-    val gongji_all_correct_num = sc.broadcast(ac_gongji_all_correct_num.value.toString)
-
-    val zhice_all_user_count = sc.broadcast(ac_zhice_all_user_count.value.toString)
-    val zhice_all_ques_count = sc.broadcast(ac_zhice_all_ques_count.value.toString)
-    val zhice_all_time_total = sc.broadcast(ac_zhice_all_time_total.value.toString)
-    val zhice_all_correct_num = sc.broadcast(ac_zhice_all_correct_num.value.toString)
 
     val hbaseConf = HBaseConfiguration.create()
     hbaseConf.set("hbase.zookeeper.quorum", "192.168.100.68,192.168.100.70,192.168.100.72")
@@ -438,22 +522,42 @@ object AbilityAssessment2 {
           put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("rank4"), Bytes.toBytes(rank3.toString))
 
 
+          var arr = Array("0", "0", "0", "0")
           if (subject == 1) {
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("userCount"), Bytes.toBytes(xingce_all_user_count.value))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("quesCount"), Bytes.toBytes(xingce_all_ques_count.value))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("exerciseTimeTotal"), Bytes.toBytes(xingce_all_time_total.value))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("correctNum"), Bytes.toBytes(xingce_all_correct_num.value))
+            arr = _xingCe.value.split(",")
           } else if (subject == 2) {
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("userCount"), Bytes.toBytes(gongji_all_user_count.value))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("quesCount"), Bytes.toBytes(gongji_all_ques_count.value))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("exerciseTimeTotal"), Bytes.toBytes(gongji_all_time_total.value))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("correctNum"), Bytes.toBytes(gongji_all_correct_num.value))
+            arr = _gongJi.value.split(",")
           } else if (subject == 3) {
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("userCount"), Bytes.toBytes(zhice_all_user_count.value))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("quesCount"), Bytes.toBytes(zhice_all_ques_count.value))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("exerciseTimeTotal"), Bytes.toBytes(zhice_all_time_total.value))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("correctNum"), Bytes.toBytes(zhice_all_correct_num.value))
+            arr = _zhiCe.value.split(",")
+          } else if (subject == 100100175) {
+            arr = _gongAn.value.split(",")
           }
+          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("userCount"), Bytes.toBytes(arr(0)))
+          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("quesCount"), Bytes.toBytes(arr(1)))
+          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("exerciseTimeTotal"), Bytes.toBytes(arr(2)))
+          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("correctNum"), Bytes.toBytes(arr(3)))
+
+          //          if (subject == 1) {
+          //            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("userCount"), Bytes.toBytes(_xingCeUserCount.value))
+          //            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("quesCount"), Bytes.toBytes(_xingCeQuesCount.value))
+          //            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("exerciseTimeTotal"), Bytes.toBytes(_xingCeTimeTotal.value))
+          //            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("correctNum"), Bytes.toBytes(_xingCeCorrectNum.value))
+          //          } else if (subject == 2) {
+          //            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("userCount"), Bytes.toBytes(_gongJiUserCount.value))
+          //            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("quesCount"), Bytes.toBytes(_gongJiQuesCount.value))
+          //            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("exerciseTimeTotal"), Bytes.toBytes(_gongJiTimeTotal.value))
+          //            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("correctNum"), Bytes.toBytes(_gongJiCorrectNum.value))
+          //          } else if (subject == 3) {
+          //            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("userCount"), Bytes.toBytes(_zhiCeUserCount.value))
+          //            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("quesCount"), Bytes.toBytes(_zhiCeQuesCount.value))
+          //            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("exerciseTimeTotal"), Bytes.toBytes(_zhiCeTimeTotal.value))
+          //            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("correctNum"), Bytes.toBytes(_zhiCeCorrectNum.value))
+          //          } else if (subject == 100100175) {
+          //            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("userCount"), Bytes.toBytes(_gongAnUserCount.value))
+          //            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("quesCount"), Bytes.toBytes(_gongAnQuesCount.value))
+          //            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("exerciseTimeTotal"), Bytes.toBytes(_gongAnTimeTotal.value))
+          //            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("correctNum"), Bytes.toBytes(_gongAnCorrectNum.value))
+          //          }
 
           buffer += Tuple2(new ImmutableBytesWritable, put)
           //            lis =  +: lis
