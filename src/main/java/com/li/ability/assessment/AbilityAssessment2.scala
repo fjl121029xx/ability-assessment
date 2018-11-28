@@ -309,7 +309,7 @@ object AbilityAssessment2 {
     val week_top10_jobConf = new JobConf(week_top10_hbaseConf)
     week_top10_jobConf.setOutputFormat(classOf[TableOutputFormat])
     week_top10_jobConf.set(TableOutputFormat.OUTPUT_TABLE, "week_top10_ability_assessment")
-    val week_top10_hbasePar = weekTop10.rdd.coalesce(1).mapPartitions {
+    val week_top10_hbasePar = weekTop10.rdd.repartition(1).mapPartitions {
       ite: Iterator[Row] =>
 
         //          var lis: Seq[] = Seq()
@@ -389,7 +389,7 @@ object AbilityAssessment2 {
     val weekJobConf = new JobConf(weekHBaseConf)
     weekJobConf.setOutputFormat(classOf[TableOutputFormat])
     weekJobConf.set(TableOutputFormat.OUTPUT_TABLE, "week_ability_assessment")
-    val weekData = week.rdd.coalesce(1).mapPartitions {
+    val weekData = week.rdd.repartition(1).mapPartitions {
       ite: Iterator[Row] =>
 
         //          var lis: Seq[] = Seq()
@@ -484,7 +484,7 @@ object AbilityAssessment2 {
     val jobConf = new JobConf(HBaseConf)
     jobConf.setOutputFormat(classOf[TableOutputFormat])
     jobConf.set(TableOutputFormat.OUTPUT_TABLE, "total_station_ability_assessment")
-    val data = ts.rdd.coalesce(1).mapPartitions {
+    val data = ts.rdd.repartition(1).mapPartitions {
       ite: Iterator[Row] =>
 
         var buffer = new ArrayBuffer[(ImmutableBytesWritable, Put)]()

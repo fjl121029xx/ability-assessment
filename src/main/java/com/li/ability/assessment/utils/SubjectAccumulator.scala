@@ -32,7 +32,7 @@ class SubjectAccumulator extends AccumulatorV2[String, String] {
       s"Cannot merge ${this.getClass.getName} with ${other.getClass.getName}")
   }
 
-  override def value: String = ???
+  override def value: String = res
 
   private def abc(res1: String, res2: String): String = {
 
