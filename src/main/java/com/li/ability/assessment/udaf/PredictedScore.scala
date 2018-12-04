@@ -75,7 +75,7 @@ class PredictedScore extends UserDefinedAggregateFunction {
 
   override def update(buffer: MutableAggregationBuffer, input: Row): Unit = {
 
-    val format = new SimpleDateFormat("yyyy-MM-dd")
+
 
     val corrects: scala.Seq[Int] = input.getSeq[Int](0)
     val points: scala.Seq[Int] = input.getSeq[Int](3)
@@ -160,7 +160,7 @@ class PredictedScore extends UserDefinedAggregateFunction {
     )
     //cumulative_time
     buffer.update(2, cumulativeTime)
-
+    val format = new SimpleDateFormat("yyyyMMdd")
     //createTimeHBaseUtil
     val createTime = input.get(4).getClass.getName match {
       case "java.lang.Integer" => input.get(4).asInstanceOf[Int].intValue()
@@ -168,6 +168,7 @@ class PredictedScore extends UserDefinedAggregateFunction {
       case "java.lang.String" => {
 
         val createTime = input.get(4).asInstanceOf[String].toString
+//        println(createTime)
         format.parse(createTime).getTime
       }
     }
@@ -506,11 +507,9 @@ object PredictedScore {
 
   def main(args: Array[String]): Unit = {
 
-    println(getScore("-1:0:0:0_642:40:40:820_435:40:40:676_482:9:10:687_392:19:20:142_754:18:20:1113",
-      1))
-    //
-    val a: Long = 267L
-    println(a.toString)
+    val format = "2817632665"
+
+    print(format.toLong)
   }
 
   //  def main(args: Array[String]): Unit = {

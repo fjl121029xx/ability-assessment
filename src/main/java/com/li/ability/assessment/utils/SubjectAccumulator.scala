@@ -36,13 +36,20 @@ class SubjectAccumulator extends AccumulatorV2[String, String] {
 
   private def abc(res1: String, res2: String): String = {
 
-    val tmp = ""
-    val init = res1.split(",").map(_.asInstanceOf[Int].intValue())
-    val toadd = res2.split(",").map(_.asInstanceOf[Int].intValue())
+    var tmp = ""
+    val init = res1.split(",").map(_.toLong).toSeq
+    val toadd = res2.split(",").map(_.toLong).toSeq
 
-    for (i <- init; j <- toadd) {
-      tmp.concat(i + j + "").concat(",")
-    }
-    tmp.substring(0, tmp.length - 1)
+
+    tmp = tmp.concat(init(0) + toadd(0) + "").concat(",")
+      .concat(init(1) + toadd(1) + "").concat(",")
+      .concat(init(2) + toadd(2) + "").concat(",")
+      .concat(init(3) + toadd(3) + "")
+
+    //    for (i <- init; j <- toadd) {
+    //      tmp.concat(i + j + "").concat(",")
+    //    }
+    tmp = tmp.substring(0, tmp.length - 1)
+    tmp
   }
 }
