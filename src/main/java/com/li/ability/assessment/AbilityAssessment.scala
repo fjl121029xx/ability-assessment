@@ -61,9 +61,9 @@ object AbilityAssessment {
       .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
       .set("spark.mongodb.input.readPreference.name", "secondaryPreferred")
       .set("spark.mongodb.input.partitioner", "MongoSamplePartitioner")
-      .set("spark.mongodb.input.partitionKey", "_id")
-      .set("spark.mongodb.input.partitionSizeMB", "5120")
-      .set("spark.mongodb.input.samplesPerPartition", "5000000")
+      .set("spark.mongodb.input.partitionerOptions.partitionKey", "createTime")
+      .set("spark.mongodb.input.partitionerOptions.partitionSizeMB", "10")
+      .set("spark.mongodb.input.partitionerOptions.samplesPerPartition", "10000")
       .set("spark.debug.maxToStringFields", "100")
       .registerKryoClasses(Array(classOf[scala.collection.mutable.WrappedArray.ofRef[_]], classOf[AnswerCard]))
 
