@@ -27,7 +27,7 @@ object AbilityAssessment2 {
 
     val conf = new SparkConf()
       .setAppName("AbilityAssessment2")
-//            .setMaster("local[3]")
+//            .setMaster("local")
       .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
       .registerKryoClasses(Array(classOf[scala.collection.mutable.WrappedArray.ofRef[_]], classOf[AnswerCard]))
 
@@ -50,8 +50,13 @@ object AbilityAssessment2 {
     //      .createOrReplaceTempView("spark_ztk_answer_card")
 
     sparkSession.udf.register("predictedScore", new PredictedScore)
-    val predicted_score = sparkSession.sql("select userId,predictedScore(correct,question,answerTime,point,createTime) predictedScore,subject from ztk_answer_card_par group by userId,subject")
+    val predicted_score = sparkSession.sql("" +
+      " select userId,predictedScore(correct,question,answerTime,point,createTime) predictedScore,subject " +
+      " from ztk_answer_card " +
+      " group by userId,subject")
     predicted_score.coalesce(300)
+
+    predicted_score.cache()
 
     predicted_score.show()
     // 累加器
@@ -127,6 +132,7 @@ object AbilityAssessment2 {
         }
         arr.iterator
     }.toDF()
+    ts_predicted_score_df.show()
     ts_predicted_score_df.createOrReplaceTempView("ts_predicted_score_df")
     val ts = sparkSession.sql("" +
       " select " +
@@ -142,6 +148,7 @@ object AbilityAssessment2 {
       "Row_Number() OVER(partition by subject order by cumulative_time desc) rank3," +
       "Row_Number() OVER(partition by subject order by do_exercise_num desc) rank4  " +
       "from ts_predicted_score_df")
+
 
 
     val week_predicted_score_df = predicted_score_rdd.mapPartitions {
@@ -205,14 +212,14 @@ object AbilityAssessment2 {
     week_top10_hbaseConf.set("hbase.zookeeper.quorum", "192.168.100.68,192.168.100.70,192.168.100.72")
     week_top10_hbaseConf.set("hbase.zookeeper.property.clientPort", "2181")
     week_top10_hbaseConf.set("hbase.rootdir", "/hbase")
-    week_top10_hbaseConf.set("hbase.client.retries.number", "3")
+    week_top10_hbaseConf.set("hbase.client.retries.number", "300")
     week_top10_hbaseConf.set("hbase.rpc.timeout", "200000")
-    week_top10_hbaseConf.set("hbase.client.operation.timeout", "30")
-    week_top10_hbaseConf.set("hbase.client.scanner.timeout.period", "100")
+    week_top10_hbaseConf.set("hbase.client.operation.timeout", "30000")
+    week_top10_hbaseConf.set("hbase.client.scanner.timeout.period", "10000")
     val week_top10_jobConf = new JobConf(week_top10_hbaseConf)
     week_top10_jobConf.setOutputFormat(classOf[TableOutputFormat])
     week_top10_jobConf.set(TableOutputFormat.OUTPUT_TABLE, "week_top10_ability_assessment")
-    val week_top10_hbasePar = weekTop10.rdd.repartition(1).mapPartitions {
+    val week_top10_hbasePar = weekTop10.rdd.repartition(100).mapPartitions {
       ite: Iterator[Row] =>
 
         //          var lis: Seq[] = Seq()
@@ -254,23 +261,27 @@ object AbilityAssessment2 {
     val _zhiCe = sc.broadcast(zhiCe.value)
     val _gongAn = sc.broadcast(gongAn.value)
 
+
+
     val _xingCeWeek = sc.broadcast(xingCeWeek.value)
     val _gongJiWeek = sc.broadcast(gongJiWeek.value)
     val _zhiCeWeek = sc.broadcast(zhiCeWeek.value)
     val _gongAnWeek = sc.broadcast(gongAnWeek.value)
 
+
+
     val weekHBaseConf = HBaseConfiguration.create()
     weekHBaseConf.set("hbase.zookeeper.quorum", "192.168.100.68,192.168.100.70,192.168.100.72")
     weekHBaseConf.set("hbase.zookeeper.property.clientPort", "2181")
     weekHBaseConf.set("hbase.rootdir", "/hbase")
-    weekHBaseConf.set("hbase.client.retries.number", "3")
+    weekHBaseConf.set("hbase.client.retries.number", "300")
     weekHBaseConf.set("hbase.rpc.timeout", "200000")
-    weekHBaseConf.set("hbase.client.operation.timeout", "30")
+    weekHBaseConf.set("hbase.client.operation.timeout", "30000")
     weekHBaseConf.set("hbase.client.scanner.timeout.period", "100")
     val weekJobConf = new JobConf(weekHBaseConf)
     weekJobConf.setOutputFormat(classOf[TableOutputFormat])
     weekJobConf.set(TableOutputFormat.OUTPUT_TABLE, "week_ability_assessment")
-    val weekData = week.rdd.repartition(1).mapPartitions {
+    val weekData = week.rdd.repartition(100).mapPartitions {
       ite: Iterator[Row] =>
 
         //          var lis: Seq[] = Seq()
@@ -336,15 +347,15 @@ object AbilityAssessment2 {
     HBaseConf.set("hbase.zookeeper.quorum", "192.168.100.68,192.168.100.70,192.168.100.72")
     HBaseConf.set("hbase.zookeeper.property.clientPort", "2181")
     HBaseConf.set("hbase.rootdir", "/hbase")
-    HBaseConf.set("hbase.client.retries.number", "3")
+    HBaseConf.set("hbase.client.retries.number", "300")
     HBaseConf.set("hbase.rpc.timeout", "200000")
-    HBaseConf.set("hbase.client.operation.timeout", "30")
+    HBaseConf.set("hbase.client.operation.timeout", "30000")
     HBaseConf.set("hbase.client.scanner.timeout.period", "100")
 
     val jobConf = new JobConf(HBaseConf)
     jobConf.setOutputFormat(classOf[TableOutputFormat])
     jobConf.set(TableOutputFormat.OUTPUT_TABLE, "total_station_ability_assessment")
-    val data = ts.rdd.repartition(1).mapPartitions {
+    val data = ts.rdd.repartition(100).mapPartitions {
       ite: Iterator[Row] =>
 
         var buffer = new ArrayBuffer[(ImmutableBytesWritable, Put)]()

@@ -11,7 +11,7 @@ class SubjectAccumulator extends AccumulatorV2[String, String] {
     */
   private var res = "0,0,0,0"
 
-  override def isZero: Boolean = res == "" || res == "0,0,0,0"
+  override def isZero: Boolean = res == "" || res.eq("0,0,0,0")
 
   override def copy(): AccumulatorV2[String, String] = {
 
@@ -23,7 +23,7 @@ class SubjectAccumulator extends AccumulatorV2[String, String] {
 
   override def reset(): Unit = res = "0,0,0,0"
 
-  override def add(v: String): Unit = abc(res, v)
+  override def add(v: String): Unit = this.res = abc(res, v)
 
   override def merge(other: AccumulatorV2[String, String]): Unit = other match {
 
@@ -32,24 +32,34 @@ class SubjectAccumulator extends AccumulatorV2[String, String] {
       s"Cannot merge ${this.getClass.getName} with ${other.getClass.getName}")
   }
 
-  override def value: String = res
+  override def value: String = {
+
+    //    println(this.res)
+    this.res
+  }
 
   private def abc(res1: String, res2: String): String = {
 
     var tmp = ""
-    val init = res1.split(",").map(_.toLong).toSeq
-    val toadd = res2.split(",").map(_.toLong).toSeq
 
+    try {
+      val init = res1.split(",").map(_.toLong).toSeq
+      val toadd = res2.split(",").map(_.toLong).toSeq
 
-    tmp = tmp.concat(init(0) + toadd(0) + "").concat(",")
-      .concat(init(1) + toadd(1) + "").concat(",")
-      .concat(init(2) + toadd(2) + "").concat(",")
-      .concat(init(3) + toadd(3) + "")
+      tmp = (init.head + toadd.head) + "," +
+        (init(1) + toadd(1)) + "," +
+        (init(2) + toadd(2)) + "," +
+        (init(3) + toadd(3))
+    } catch {
 
-    //    for (i <- init; j <- toadd) {
-    //      tmp.concat(i + j + "").concat(",")
-    //    }
-    tmp = tmp.substring(0, tmp.length - 1)
+      case e: ArrayIndexOutOfBoundsException =>
+        println(res1)
+        println(res2)
+        e.printStackTrace()
+    }
+
+    //    tmp = tmp.substring(0, tmp.length - 1)
+    this.res = tmp
     tmp
   }
 }

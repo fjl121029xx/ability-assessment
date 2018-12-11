@@ -96,31 +96,18 @@ public class HBaseUtil {
     public static void main(String[] args) throws Exception {
 
         Configuration conf = HBaseConfiguration.create();
-        conf.set("hbase.zookeeper.quorum", "192.168.100.27,192.168.100.28,192.168.100.29");
+        conf.set("hbase.zookeeper.quorum", "192.168.100.68,192.168.100.70,192.168.100.72");
 //        conf.set("hbase.zookeeper.quorum", "192.168.100.68,192.168.100.70,192.168.100.72");
-        conf.set("hbase.zookeeper.property.clientPort","2181");
+        conf.set("hbase.zookeeper.property.clientPort", "2181");
         conf.set("hbase.rootdir", "/hbase");
 
         HBaseAdmin admin = new HBaseAdmin(conf);
-
-        HTableDescriptor table = new HTableDescriptor("videoplay");
-        HColumnDescriptor columnFamily = new HColumnDescriptor("playinfo");
+//playinfo   videoplay2
+        HTableDescriptor table = new HTableDescriptor("week_top10_ability_assessment");
+        HColumnDescriptor columnFamily = new HColumnDescriptor("ability_assessment_info");
         columnFamily.setMaxVersions(10);
         table.addFamily(columnFamily);
         admin.createTable(table);
-
-        HTableDescriptor table2 = new HTableDescriptor("tody_videoplay");
-        HColumnDescriptor columnFamily2 = new HColumnDescriptor("playinfo");
-        columnFamily2.setMaxVersions(10);
-        table2.addFamily(columnFamily2);
-        admin.createTable(table2);
-
-        HTableDescriptor table3 = new HTableDescriptor("videoplay_grotime");
-        HColumnDescriptor columnFamily3 = new HColumnDescriptor("playinfo");
-        columnFamily3.setMaxVersions(10);
-        table3.addFamily(columnFamily3);
-        admin.createTable(table3);
-
 
         admin.close();
 
@@ -145,7 +132,6 @@ public class HBaseUtil {
         table.put(put);
         table.close();
     }
-
 
 
     public static Object getObject(String tablename, String course, Class clazz) throws Exception {
@@ -182,7 +168,7 @@ public class HBaseUtil {
                 String s2 = set.substring(1, set.length());
                 if (pType.getName().equals("java.lang.Long")) {
 
-                    if (map.get(s1 + s2) != null){
+                    if (map.get(s1 + s2) != null) {
 
                         m.invoke(o, Long.parseLong(map.get(s1 + s2)));
                     }
