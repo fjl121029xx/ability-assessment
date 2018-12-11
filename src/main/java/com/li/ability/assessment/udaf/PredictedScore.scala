@@ -313,6 +313,7 @@ class PredictedScore extends UserDefinedAggregateFunction {
 
     val total_correct_num = buffer.get(8).asInstanceOf[Long].longValue()
     val week_correct_num = buffer.get(9).asInstanceOf[Long].longValue()
+
     Array(
       total_station_predict_score.replaceAll("-1:0:0:0_", ""),
       do_exercise_num.toString,

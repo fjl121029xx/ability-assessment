@@ -27,7 +27,7 @@ object AbilityAssessment2 {
 
     val conf = new SparkConf()
       .setAppName("AbilityAssessment2")
-//            .setMaster("local")
+            .setMaster("local")
       .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
       .registerKryoClasses(Array(classOf[scala.collection.mutable.WrappedArray.ofRef[_]], classOf[AnswerCard]))
 
@@ -53,6 +53,7 @@ object AbilityAssessment2 {
     val predicted_score = sparkSession.sql("" +
       " select userId,predictedScore(correct,question,answerTime,point,createTime) predictedScore,subject " +
       " from ztk_answer_card " +
+      " where createTime='20181201' " +
       " group by userId,subject")
     predicted_score.coalesce(300)
 
@@ -149,7 +150,7 @@ object AbilityAssessment2 {
       "Row_Number() OVER(partition by subject order by do_exercise_num desc) rank4  " +
       "from ts_predicted_score_df")
 
-
+    ts.show()
 
     val week_predicted_score_df = predicted_score_rdd.mapPartitions {
       ite =>
