@@ -21,7 +21,7 @@ object AbilityAssessment2 {
   def main(args: Array[String]): Unit = {
 
 
-    System.setProperty("HADOOP_USER_NAME", "root")
+//    System.setProperty("HADOOP_USER_NAME", "root")
 
     val warehouseLocation = new File("spark-warehouse").getAbsolutePath
 

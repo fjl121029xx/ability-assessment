@@ -102,8 +102,8 @@ public class HBaseUtil {
         conf.set("hbase.rootdir", "/hbase");
 
         HBaseAdmin admin = new HBaseAdmin(conf);
-//playinfo   videoplay2
-        HTableDescriptor table = new HTableDescriptor("week_top10_ability_assessment");
+        //playinfo   videoplay2
+        HTableDescriptor table = new HTableDescriptor("test_total_station_ability_assessment");
         HColumnDescriptor columnFamily = new HColumnDescriptor("ability_assessment_info");
         columnFamily.setMaxVersions(10);
         table.addFamily(columnFamily);
