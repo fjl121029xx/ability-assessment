@@ -96,15 +96,15 @@ public class HBaseUtil {
     public static void main(String[] args) throws Exception {
 
         Configuration conf = HBaseConfiguration.create();
-        conf.set("hbase.zookeeper.quorum", "192.168.100.68,192.168.100.70,192.168.100.72");
 //        conf.set("hbase.zookeeper.quorum", "192.168.100.68,192.168.100.70,192.168.100.72");
+        conf.set("hbase.zookeeper.quorum", "192.168.100.27,192.168.100.28,192.168.100.29");
         conf.set("hbase.zookeeper.property.clientPort", "2181");
         conf.set("hbase.rootdir", "/hbase");
 
         HBaseAdmin admin = new HBaseAdmin(conf);
         //playinfo   videoplay2
-        HTableDescriptor table = new HTableDescriptor("test_total_station_ability_assessment");
-        HColumnDescriptor columnFamily = new HColumnDescriptor("ability_assessment_info");
+        HTableDescriptor table = new HTableDescriptor("videoplay2");
+        HColumnDescriptor columnFamily = new HColumnDescriptor("playinfo");
         columnFamily.setMaxVersions(10);
         table.addFamily(columnFamily);
         admin.createTable(table);

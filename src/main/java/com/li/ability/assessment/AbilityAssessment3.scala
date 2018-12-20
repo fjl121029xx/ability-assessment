@@ -32,7 +32,8 @@ case class TS_AbilityAssessment(userId: Long,
                                 cumulative_time: Long,
                                 do_exercise_day: Long,
                                 subject: Int,
-                                total_correct_num: Long
+                                total_correct_num: Long,
+                                total_undo_num: Long
                                )
 
 case class Week_AbilityAssessment(userId: Long,
@@ -43,7 +44,8 @@ case class Week_AbilityAssessment(userId: Long,
                                   week_cumulative_time: Long,
                                   week_correct_num: Long,
                                   week_speek: Double,
-                                  week_accuracy: Double
+                                  week_accuracy: Double,
+                                  week_undo_num: Long
 
                                  )
 
@@ -69,11 +71,14 @@ object AbilityAssessment3 {
       user = "root"
       password = "unimob@12254ns"
     }
-    //
-    //    hive_input_table = "zac2"
-    //    weekTop10Table = "test_week_top10_ability_assessment"
-    //    weekTable = "test_week_ability_assessment"
-    //    hbase_output_table = "test_total_station_ability_assessment"
+
+//        hive_input_table = "zac2"
+//        weekTop10Table = "test_week_top10_ability_assessment"
+//        weekTable = "test_week_ability_assessment"
+//        hbase_output_table = "test_total_station_ability_assessment"
+//        mysql = "jdbc:mysql://192.168.100.21/teacher?characterEncoding=UTF-8&transformedBitIsBoolean=false&tinyInt1isBit=false"
+//        user = "root"
+//        password = "unimob@12254ns"
 
 
     System.setProperty("HADOOP_USER_NAME", "root")
@@ -81,7 +86,7 @@ object AbilityAssessment3 {
 
     val conf = new SparkConf()
       .setAppName("AbilityAssessment3")
-      //      .setMaster("local")
+//      .setMaster("local")
       .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
       .registerKryoClasses(Array(classOf[scala.collection.mutable.WrappedArray.ofRef[_]], classOf[AnswerCard]))
 
@@ -181,6 +186,11 @@ object AbilityAssessment3 {
     val cNumZc = sc.longAccumulator("cNumZc")
     val cNumGa = sc.longAccumulator("cNumGa")
 
+    val undoNumXc = sc.longAccumulator("undoNumXc")
+    val undoNumGj = sc.longAccumulator("undoNumGj")
+    val undoNumZc = sc.longAccumulator("undoNumZc")
+    val undoNumGa = sc.longAccumulator("undoNumGa")
+
     /**
       * 周
       */
@@ -208,6 +218,11 @@ object AbilityAssessment3 {
     val weekCNumZc = sc.longAccumulator("weekCNumZc")
     val weekCNumGa = sc.longAccumulator("weekCNumGa")
 
+    val weekUndoNumXc = sc.longAccumulator("weekUndoNumXc")
+    val weekUndoNumGj = sc.longAccumulator("weekUndoNumGj")
+    val weekUndoNumZc = sc.longAccumulator("weekUndoNumZc")
+    val weekUndoNumGa = sc.longAccumulator("weekUndoNumGa")
+
     predicted_score.cache()
     val ts_predicted_score_df = predicted_score.mapPartitions {
       ite =>
@@ -225,22 +240,26 @@ object AbilityAssessment3 {
             qCountXc.add(predictedScore(1).toLong)
             timeToltalXc.add(predictedScore(2).toLong)
             cNumXc.add(predictedScore(7).toLong)
+            undoNumXc.add(predictedScore(9).toLong)
           } else if (subject == 2) {
             userCountGj.add(1)
             qCountGj.add(predictedScore(1).toLong)
             timeTotalGj.add(predictedScore(2).toLong)
             cNumGj.add(predictedScore(7).toLong)
+            undoNumGj.add(predictedScore(9).toLong)
           } else if (subject == 3) {
             userCountZc.add(1)
             qCountZc.add(predictedScore(1).toLong)
             timeTotalZc.add(predictedScore(2).toLong)
             cNumZc.add(predictedScore(7).toLong)
+            undoNumZc.add(predictedScore(9).toLong)
           }
           else if (subject == 100100175) {
             userCountGa.add(1)
             qCountGa.add(predictedScore(1).toLong)
             timeTotalGa.add(predictedScore(2).toLong)
             cNumGa.add(predictedScore(7).toLong)
+            undoNumGa.add(predictedScore(9).toLong)
           }
           //          println(userCountXc.value)
           arr += TS_AbilityAssessment(
@@ -251,7 +270,8 @@ object AbilityAssessment3 {
             predictedScore(2).toLong, //cumulative_time
             predictedScore(4).toLong, //do_exercise_day
             subject,
-            predictedScore(7).toLong //total_correct_num
+            predictedScore(7).toLong, //total_correct_num
+            predictedScore(9).toLong //total_undo_num
           )
         }
         arr.iterator
@@ -262,21 +282,25 @@ object AbilityAssessment3 {
     val _XcQCount = sc.broadcast(qCountXc.value.toString)
     val _XcTTotal = sc.broadcast(timeToltalXc.value.toString)
     val _XcCNum = sc.broadcast(cNumXc.value.toString)
+    val _XcUndoNum = sc.broadcast(undoNumXc.value.toString)
 
     val _GjUCount = sc.broadcast(userCountGj.value.toString)
     val _GjQCOUNT = sc.broadcast(qCountGj.value.toString)
     val _GjTTotal = sc.broadcast(timeTotalGj.value.toString)
     val _GjCNum = sc.broadcast(cNumGj.value.toString)
+    val _GjUndoNum = sc.broadcast(undoNumGj.value.toString)
 
     val _ZcUCount = sc.broadcast(userCountZc.value.toString)
     val _ZcQCount = sc.broadcast(qCountZc.value.toString)
     val _ZcTTotal = sc.broadcast(timeTotalZc.value.toString)
     val _ZcCNumt = sc.broadcast(cNumZc.value.toString)
+    val _ZcUndoNum = sc.broadcast(undoNumZc.value.toString)
 
     val _GaUCount = sc.broadcast(userCountGa.value.toString)
     val _GaQCount = sc.broadcast(qCountGa.value.toString)
     val _GaTTotal = sc.broadcast(timeTotalGa.value.toString)
     val _GaCNumt = sc.broadcast(cNumGa.value.toString)
+    val _GaUndoNum = sc.broadcast(undoNumGa.value.toString)
 
     ts_predicted_score_df.createOrReplaceTempView("ts_predicted_score_df")
     val ts = sparkSession.sql("" +
@@ -330,40 +354,48 @@ object AbilityAssessment3 {
 
 
           val put = new Put(Bytes.toBytes(userId.toString + "-" + subject)) //行健的值
-          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("grade"), Bytes.toBytes(total_station_grade.toString))
-          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("predictScore"), Bytes.toBytes(total_station_predict_score.toString))
-          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("exerciseNum"), Bytes.toBytes(do_exercise_num.toString))
-          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("exerciseTime"), Bytes.toBytes(cumulative_time.toString))
-          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("exerciseDay"), Bytes.toBytes(do_exercise_day.toString))
-          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("subject"), Bytes.toBytes(subject.toString))
-          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("rank"), Bytes.toBytes(rank.toString))
-          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("rank2"), Bytes.toBytes(rank2.toString))
-          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("rank3"), Bytes.toBytes(rank3.toString))
-          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("rank4"), Bytes.toBytes(rank3.toString))
-          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("sp"), Bytes.toBytes(sp.getOrElse(subject, "").toString))
-          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("spn"), Bytes.toBytes(spn.getOrElse(subject, "")))
+          put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("grade"), Bytes.toBytes(total_station_grade.toString))
+          put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("predictScore"), Bytes.toBytes(total_station_predict_score.toString))
+          put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("exerciseNum"), Bytes.toBytes(do_exercise_num.toString))
+          put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("exerciseTime"), Bytes.toBytes(cumulative_time.toString))
+          put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("exerciseDay"), Bytes.toBytes(do_exercise_day.toString))
+          put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("subject"), Bytes.toBytes(subject.toString))
+          put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("rank"), Bytes.toBytes(rank.toString))
+          put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("rank2"), Bytes.toBytes(rank2.toString))
+          put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("rank3"), Bytes.toBytes(rank3.toString))
+          put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("rank4"), Bytes.toBytes(rank4.toString))
+          put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("sp"), Bytes.toBytes(sp.getOrElse(subject, "").toString))
+          put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("spn"), Bytes.toBytes(spn.getOrElse(subject, "")))
 
 
           if (subject == 1) {
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("userCount"), Bytes.toBytes(_XcUCount.value))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("quesCount"), Bytes.toBytes(_XcQCount.value))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("exerciseTimeTotal"), Bytes.toBytes(_XcTTotal.value))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("correctNum"), Bytes.toBytes(_XcCNum.value))
+
+            put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("userCount"), Bytes.toBytes(_XcUCount.value))
+            put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("quesCount"), Bytes.toBytes(_XcQCount.value))
+            put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("exerciseTimeTotal"), Bytes.toBytes(_XcTTotal.value))
+            put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("correctNum"), Bytes.toBytes(_XcCNum.value))
+            put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("undoCount"), Bytes.toBytes(_XcUndoNum.value))
           } else if (subject == 2) {
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("userCount"), Bytes.toBytes(_GjUCount.value))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("quesCount"), Bytes.toBytes(_GjQCOUNT.value))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("exerciseTimeTotal"), Bytes.toBytes(_GjTTotal.value))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("correctNum"), Bytes.toBytes(_GjCNum.value))
+
+            put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("userCount"), Bytes.toBytes(_GjUCount.value))
+            put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("quesCount"), Bytes.toBytes(_GjQCOUNT.value))
+            put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("exerciseTimeTotal"), Bytes.toBytes(_GjTTotal.value))
+            put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("correctNum"), Bytes.toBytes(_GjCNum.value))
+            put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("undoCount"), Bytes.toBytes(_GjUndoNum.value))
           } else if (subject == 3) {
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("userCount"), Bytes.toBytes(_ZcUCount.value))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("quesCount"), Bytes.toBytes(_ZcQCount.value))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("exerciseTimeTotal"), Bytes.toBytes(_ZcTTotal.value))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("correctNum"), Bytes.toBytes(_ZcCNumt.value))
+
+            put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("userCount"), Bytes.toBytes(_ZcUCount.value))
+            put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("quesCount"), Bytes.toBytes(_ZcQCount.value))
+            put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("exerciseTimeTotal"), Bytes.toBytes(_ZcTTotal.value))
+            put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("correctNum"), Bytes.toBytes(_ZcCNumt.value))
+            put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("undoCount"), Bytes.toBytes(_ZcUndoNum.value))
           } else if (subject == 100100175) {
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("userCount"), Bytes.toBytes(_GaUCount.value))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("quesCount"), Bytes.toBytes(_GaQCount.value))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("exerciseTimeTotal"), Bytes.toBytes(_GaTTotal.value))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("correctNum"), Bytes.toBytes(_GaCNumt.value))
+
+            put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("userCount"), Bytes.toBytes(_GaUCount.value))
+            put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("quesCount"), Bytes.toBytes(_GaQCount.value))
+            put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("exerciseTimeTotal"), Bytes.toBytes(_GaTTotal.value))
+            put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("correctNum"), Bytes.toBytes(_GaCNumt.value))
+            put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("undoCount"), Bytes.toBytes(_GaUndoNum.value))
           }
 
           buffer += Tuple2(new ImmutableBytesWritable, put)
@@ -422,7 +454,8 @@ object AbilityAssessment3 {
             predictedScore(6).toLong,
             predictedScore(8).toLong,
             predictedScore(6).toLong * 1.0 / predictedScore(5).toLong,
-            predictedScore(8).toLong * 1.0 / predictedScore(5).toLong
+            predictedScore(8).toLong * 1.0 / predictedScore(5).toLong,
+            predictedScore(10).toLong
           )
         }
         arr.iterator
@@ -433,21 +466,26 @@ object AbilityAssessment3 {
     val _XcWeekQCount = sc.broadcast(weekQCountXc.value.toString)
     val _XcWeekTTotal = sc.broadcast(weekTTotalXc.value.toString)
     val _XcWeekCCnum = sc.broadcast(weekCNumXc.value.toString)
+    val _XcWeekUndonum = sc.broadcast(weekUndoNumXc.value.toString)
 
     val _GjWeekUCount = sc.broadcast(weekUCountGj.value.toString)
     val _GjWeekQCount = sc.broadcast(weekQCountGj.value.toString)
     val _GjWeekTTotal = sc.broadcast(weekTTotalGj.value.toString)
     val _GjWeekCNum = sc.broadcast(weekCNumGj.value.toString)
+    val _GjWeekUndonum = sc.broadcast(weekUndoNumGj.value.toString)
+
 
     val _ZcWeekUCount = sc.broadcast(weekUCountZc.value.toString)
     val _ZcWeekQCount = sc.broadcast(weekQCountZc.value.toString)
     val _ZcWeekTTotal = sc.broadcast(weekTTotalZc.value.toString)
     val _ZcWeekCNum = sc.broadcast(weekCNumZc.value.toString)
+    val _ZcWeekUndonum = sc.broadcast(weekUndoNumZc.value.toString)
 
     val _GaWeekUCount = sc.broadcast(weekUCountGa.value.toString)
     val _GaWeekQCount = sc.broadcast(weekQCountGa.value.toString)
     val _GaWeekTTotal = sc.broadcast(weekTTotalGa.value.toString)
     val _GaWeekCNum = sc.broadcast(weekCNumGa.value.toString)
+    val _GaWeekUndonum = sc.broadcast(weekUndoNumGa.value.toString)
 
     week_predicted_score_df.createOrReplaceTempView("week_predicted_score_df")
     val week = sparkSession.sql("" +
@@ -501,13 +539,13 @@ object AbilityAssessment3 {
           val exerciseTime = t.get(6).asInstanceOf[Long].longValue()
 
           val put = new Put(Bytes.toBytes(rank + "-" + subject + "-" + TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis(), "yyyy-w"))) //行健的值
-          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("userId"), Bytes.toBytes(userId.toString))
-          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("grade"), Bytes.toBytes(grade.toString))
-          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("predict_score"), Bytes.toBytes(predictScore.toString))
-          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("subject"), Bytes.toBytes(subject.toString))
-          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("rank"), Bytes.toBytes(rank.toString))
-          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("exerciseNum"), Bytes.toBytes(exerciseNum.toString))
-          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("exerciseTime"), Bytes.toBytes(exerciseTime.toString))
+          put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("userId"), Bytes.toBytes(userId.toString))
+          put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("grade"), Bytes.toBytes(grade.toString))
+          put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("predict_score"), Bytes.toBytes(predictScore.toString))
+          put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("subject"), Bytes.toBytes(subject.toString))
+          put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("rank"), Bytes.toBytes(rank.toString))
+          put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("exerciseNum"), Bytes.toBytes(exerciseNum.toString))
+          put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("exerciseTime"), Bytes.toBytes(exerciseTime.toString))
 
 
           buffer += Tuple2(new ImmutableBytesWritable, put)
@@ -555,41 +593,49 @@ object AbilityAssessment3 {
 
 
           val put = new Put(Bytes.toBytes(userId + "-" + subject + "-" + TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis(), "yyyy-w"))) //行健的值
-          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("grade"), Bytes.toBytes(grade.toString))
-          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("predict_score"), Bytes.toBytes(predictScore.toString))
-          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("subject"), Bytes.toBytes(subject.toString))
-          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("rank"), Bytes.toBytes(rank.toString))
-          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("exerciseNum"), Bytes.toBytes(exerciseNum.toString))
-          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("exerciseTime"), Bytes.toBytes(exerciseTime.toString))
-          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("rank2"), Bytes.toBytes(rank2.toString))
-          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("rank3"), Bytes.toBytes(rank3.toString))
-          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("rank4"), Bytes.toBytes(rank4.toString))
-          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("week_speek"), Bytes.toBytes(week_speek.toString))
-          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("week_accuracy"), Bytes.toBytes(week_accuracy.toString))
-          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("sp"), Bytes.toBytes(sp.getOrElse(subject, "").toString))
-          put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("spn"), Bytes.toBytes(spn.getOrElse(subject, "")))
+          put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("grade"), Bytes.toBytes(grade.toString))
+          put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("predict_score"), Bytes.toBytes(predictScore.toString))
+          put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("subject"), Bytes.toBytes(subject.toString))
+          put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("rank"), Bytes.toBytes(rank.toString))
+          put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("exerciseNum"), Bytes.toBytes(exerciseNum.toString))
+          put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("exerciseTime"), Bytes.toBytes(exerciseTime.toString))
+          put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("rank2"), Bytes.toBytes(rank2.toString))
+          put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("rank3"), Bytes.toBytes(rank3.toString))
+          put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("rank4"), Bytes.toBytes(rank4.toString))
+          put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("week_speek"), Bytes.toBytes(week_speek.toString))
+          put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("week_accuracy"), Bytes.toBytes(week_accuracy.toString))
+          put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("sp"), Bytes.toBytes(sp.getOrElse(subject, "").toString))
+          put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("spn"), Bytes.toBytes(spn.getOrElse(subject, "")))
 
           if (subject == 1) {
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("userCount"), Bytes.toBytes(_XcWeekUCount.value))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("quesCount"), Bytes.toBytes(_XcWeekQCount.value))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("timeTotal"), Bytes.toBytes(_XcWeekTTotal.value))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("correctNum"), Bytes.toBytes(_XcWeekCCnum.value))
+
+            put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("userCount"), Bytes.toBytes(_XcWeekUCount.value))
+            put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("quesCount"), Bytes.toBytes(_XcWeekQCount.value))
+            put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("timeTotal"), Bytes.toBytes(_XcWeekTTotal.value))
+            put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("correctNum"), Bytes.toBytes(_XcWeekCCnum.value))
+            put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("undoNum"), Bytes.toBytes(_XcWeekUndonum.value))
           } else if (subject == 2) {
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("userCount"), Bytes.toBytes(_GjWeekUCount.value))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("quesCount"), Bytes.toBytes(_GjWeekQCount.value))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("timeTotal"), Bytes.toBytes(_GjWeekTTotal.value))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("correctNum"), Bytes.toBytes(_GjWeekCNum.value))
+
+            put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("userCount"), Bytes.toBytes(_GjWeekUCount.value))
+            put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("quesCount"), Bytes.toBytes(_GjWeekQCount.value))
+            put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("timeTotal"), Bytes.toBytes(_GjWeekTTotal.value))
+            put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("correctNum"), Bytes.toBytes(_GjWeekCNum.value))
+            put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("undoNum"), Bytes.toBytes(_GjWeekUndonum.value))
           } else if (subject == 3) {
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("userCount"), Bytes.toBytes(_ZcWeekUCount.value))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("quesCount"), Bytes.toBytes(_ZcWeekQCount.value))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("timeTotal"), Bytes.toBytes(_ZcWeekTTotal.value))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("correctNum"), Bytes.toBytes(_ZcWeekCNum.value))
+
+            put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("userCount"), Bytes.toBytes(_ZcWeekUCount.value))
+            put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("quesCount"), Bytes.toBytes(_ZcWeekQCount.value))
+            put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("timeTotal"), Bytes.toBytes(_ZcWeekTTotal.value))
+            put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("correctNum"), Bytes.toBytes(_ZcWeekCNum.value))
+            put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("undoNum"), Bytes.toBytes(_ZcWeekUndonum.value))
           }
           else if (subject == 100100175) {
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("userCount"), Bytes.toBytes(_GaWeekUCount.value))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("quesCount"), Bytes.toBytes(_GaWeekQCount.value))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("timeTotal"), Bytes.toBytes(_GaWeekTTotal.value))
-            put.add(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("correctNum"), Bytes.toBytes(_GaWeekCNum.value))
+
+            put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("userCount"), Bytes.toBytes(_GaWeekUCount.value))
+            put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("quesCount"), Bytes.toBytes(_GaWeekQCount.value))
+            put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("timeTotal"), Bytes.toBytes(_GaWeekTTotal.value))
+            put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("correctNum"), Bytes.toBytes(_GaWeekCNum.value))
+            put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("undoNum"), Bytes.toBytes(_GaWeekUndonum.value))
           }
 
           buffer += Tuple2(new ImmutableBytesWritable, put)

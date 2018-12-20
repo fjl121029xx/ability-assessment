@@ -21,13 +21,13 @@ object AbilityAssessment2 {
   def main(args: Array[String]): Unit = {
 
 
-//    System.setProperty("HADOOP_USER_NAME", "root")
+    //    System.setProperty("HADOOP_USER_NAME", "root")
 
     val warehouseLocation = new File("spark-warehouse").getAbsolutePath
 
     val conf = new SparkConf()
       .setAppName("AbilityAssessment2")
-            .setMaster("local")
+      .setMaster("local")
       .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
       .registerKryoClasses(Array(classOf[scala.collection.mutable.WrappedArray.ofRef[_]], classOf[AnswerCard]))
 
@@ -128,7 +128,8 @@ object AbilityAssessment2 {
             predictedScore(2).toLong, //cumulative_time
             predictedScore(4).toLong, //do_exercise_day
             subject,
-            predictedScore(7).toLong //total_correct_num
+            predictedScore(7).toLong, //total_correct_num
+            predictedScore(9).toLong
           )
         }
         arr.iterator
@@ -185,7 +186,8 @@ object AbilityAssessment2 {
             predictedScore(6).toLong,
             predictedScore(8).toLong,
             predictedScore(6).toLong * 1.0 / predictedScore(5).toLong,
-            predictedScore(8).toLong * 1.0 / predictedScore(5).toLong
+            predictedScore(8).toLong * 1.0 / predictedScore(5).toLong,
+            predictedScore(10).toLong
           )
         }
         arr.iterator
@@ -263,12 +265,10 @@ object AbilityAssessment2 {
     val _gongAn = sc.broadcast(gongAn.value)
 
 
-
     val _xingCeWeek = sc.broadcast(xingCeWeek.value)
     val _gongJiWeek = sc.broadcast(gongJiWeek.value)
     val _zhiCeWeek = sc.broadcast(zhiCeWeek.value)
     val _gongAnWeek = sc.broadcast(gongAnWeek.value)
-
 
 
     val weekHBaseConf = HBaseConfiguration.create()
