@@ -107,18 +107,13 @@ class PredictedScore extends UserDefinedAggregateFunction {
 
           mutmap += (f._1._1 -> (correct, total, tim, undo))
 
-        } else if (f._1._2 == 0) {
+        }
+//
+        else if (f._1._2 == 2){
           val correct = t._1
           val total = t._2 + 1
           val tim = t._3 + f._2
-          val undo = t._4 + 1
-
-          mutmap += (f._1._1 -> (correct, total, tim, undo))
-        } else {
-          val correct = t._1
-          val total = t._2 + 1
-          val tim = t._3 + f._2
-          val undo = t._1
+          val undo = t._4
           mutmap += (f._1._1 -> (correct, total, tim, undo))
         }
       }
@@ -169,9 +164,14 @@ class PredictedScore extends UserDefinedAggregateFunction {
 
     val quesArr = new ArrayBuffer[Int]()
     buffer.getAs[Seq[Int]](1).foreach(quesArr += _)
-    questions.foreach(f =>
-      quesArr += f
-    )
+    questions.zip(corrects).foreach{
+      case (a,b) =>{
+        if (b == 1 ||b==2){
+          quesArr += a
+        }
+      }
+    }
+
     //do_exercise_num
     buffer.update(1, quesArr)
 
@@ -240,9 +240,17 @@ class PredictedScore extends UserDefinedAggregateFunction {
 
       val weekQuesArr = new ArrayBuffer[Int]()
       buffer.getAs[Seq[Int]](6).foreach(weekQuesArr += _)
-      questions.foreach(f =>
-        weekQuesArr += f
-      )
+
+      val questions = input.getSeq[Int](1)
+
+      questions.zip(corrects).foreach{
+        case (a,b) =>{
+          if (b == 1 ||b==2){
+            weekQuesArr += a
+          }
+        }
+      }
+
       buffer.update(6, weekQuesArr.toSeq)
 
 
@@ -553,7 +561,8 @@ object PredictedScore {
 
     val format = "2817632665"
 
-    print(format.toLong)
+
+    print( getScore("-1:0:0:0:0_392:1:6:32:0",1))
   }
 
   //  def main(args: Array[String]): Unit = {
