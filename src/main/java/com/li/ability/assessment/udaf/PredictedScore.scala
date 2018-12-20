@@ -324,10 +324,14 @@ class PredictedScore extends UserDefinedAggregateFunction {
     aggreBuffer.update(7, row.get(7).asInstanceOf[Int].intValue() + aggreBuffer.get(7).asInstanceOf[Int].intValue())
 
     aggreBuffer.update(8, row.get(8).asInstanceOf[Long].longValue() + aggreBuffer.get(8).asInstanceOf[Long].longValue())
+
     aggreBuffer.update(9, row.get(9).asInstanceOf[Long].longValue() + aggreBuffer.get(9).asInstanceOf[Long].longValue())
 
-    aggreBuffer.update(10, row.get(10).asInstanceOf[Long].longValue() + aggreBuffer.get(10).asInstanceOf[Long].longValue())
-    aggreBuffer.update(11, row.get(11).asInstanceOf[Long].longValue() + aggreBuffer.get(11).asInstanceOf[Long].longValue())
+    val error = row.get(10).asInstanceOf[Long].longValue()
+    aggreBuffer.update(10, error + aggreBuffer.get(10).asInstanceOf[Long].longValue())
+
+    val weekError = row.get(11).asInstanceOf[Long].longValue()
+    aggreBuffer.update(11, weekError + aggreBuffer.get(11).asInstanceOf[Long].longValue())
   }
 
   override def evaluate(buffer: Row): Any = {
@@ -345,7 +349,7 @@ class PredictedScore extends UserDefinedAggregateFunction {
     val week_correct_num = buffer.get(9).asInstanceOf[Long].longValue()
 
     val total_undo_num = buffer.get(10).asInstanceOf[Long].longValue()
-    val week_undo_num = buffer.get(10).asInstanceOf[Long].longValue()
+    val week_undo_num = buffer.get(11).asInstanceOf[Long].longValue()
 
     Array(
       total_station_predict_score.replaceAll("-1:0:0:0:0_", ""),
@@ -376,7 +380,7 @@ object PredictedScore {
 
     total_station_predict_score.split("_").foreach(f => {
       val arr = f.split(":").map(Integer.parseInt(_))
-      mutmap += (arr(0).asInstanceOf[Int].intValue() -> (arr(1).asInstanceOf[Int].intValue(), arr(2).asInstanceOf[Int].intValue(), arr(3).asInstanceOf[Int].intValue(), arr(4).asInstanceOf[Int].intValue()))
+      mutmap += (arr(0).intValue() -> (arr(1).intValue(), arr(2).intValue(), arr(3).intValue(), arr(4).intValue()))
     })
 
     mutmap

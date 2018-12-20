@@ -72,13 +72,13 @@ object AbilityAssessment3 {
       password = "unimob@12254ns"
     }
 
-//        hive_input_table = "zac2"
-//        weekTop10Table = "test_week_top10_ability_assessment"
-//        weekTable = "test_week_ability_assessment"
-//        hbase_output_table = "test_total_station_ability_assessment"
-//        mysql = "jdbc:mysql://192.168.100.21/teacher?characterEncoding=UTF-8&transformedBitIsBoolean=false&tinyInt1isBit=false"
-//        user = "root"
-//        password = "unimob@12254ns"
+    //        hive_input_table = "zac2"
+    //        weekTop10Table = "test_week_top10_ability_assessment"
+    //        weekTable = "test_week_ability_assessment"
+    //        hbase_output_table = "test_total_station_ability_assessment"
+    //        mysql = "jdbc:mysql://192.168.100.21/teacher?characterEncoding=UTF-8&transformedBitIsBoolean=false&tinyInt1isBit=false"
+    //        user = "root"
+    //        password = "unimob@12254ns"
 
 
     System.setProperty("HADOOP_USER_NAME", "root")
@@ -86,7 +86,7 @@ object AbilityAssessment3 {
 
     val conf = new SparkConf()
       .setAppName("AbilityAssessment3")
-//      .setMaster("local")
+      //      .setMaster("local")
       .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
       .registerKryoClasses(Array(classOf[scala.collection.mutable.WrappedArray.ofRef[_]], classOf[AnswerCard]))
 
