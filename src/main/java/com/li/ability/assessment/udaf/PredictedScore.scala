@@ -562,7 +562,7 @@ object PredictedScore {
     val format = "2817632665"
 
 
-    print( getScore("-1:0:0:0:0_392:1:6:32:0",1))
+    print( getScore("-1:0:0:0:0_642:20:80:81:0_435:24:80:103:0_482:6:30:36:0_392:12:41:45:0_754:8:39:54:0",1))
   }
 
   //  def main(args: Array[String]): Unit = {

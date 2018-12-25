@@ -106,15 +106,15 @@ object TimeUtils {
     dayNumOfWeek == 6 || dayNumOfWeek == 7
   }
 
-  //上周第一天
   def getWeekEndTimeStamp(): Long = {
     convertDateStr2TimeStamp(TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis() - 14400000, "yyyy-w"), "yyyy-w") + 8 * 86400000L
+//    1545494400000L
   }
 
-  //上周最后一天
   def getWeekStartTimeStamp(): Long = {
 
     convertDateStr2TimeStamp(TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis() - 14400000, "yyyy-w"), "yyyy-w") + 86400000L
+//    1544889600000L
   }
 
   def main(args: Array[String]): Unit = {
@@ -126,6 +126,6 @@ object TimeUtils {
     //    val tmp = convertDateStr2TimeStamp(TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis(), "yyyy-w"), "yyyy-w")
     //
     //    println(TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis(), "yyyy-w"))
-    //    println(tmp)
+        println(getWeekStartTimeStamp)
   }
 }

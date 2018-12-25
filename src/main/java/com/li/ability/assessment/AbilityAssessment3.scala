@@ -71,14 +71,14 @@ object AbilityAssessment3 {
       user = "root"
       password = "unimob@12254ns"
     }
-//
-//    hive_input_table = "zac2"
-//    weekTop10Table = "test_week_top10_ability_assessment"
-//    weekTable = "test_week_ability_assessment"
-//    hbase_output_table = "test_total_station_ability_assessment"
-//    mysql = "jdbc:mysql://192.168.100.21/teacher?characterEncoding=UTF-8&transformedBitIsBoolean=false&tinyInt1isBit=false"
-//    user = "root"
-//    password = "unimob@12254ns"
+    //
+    hive_input_table = "zac2"
+    weekTop10Table = "test_week_top10_ability_assessment"
+    weekTable = "test_week_ability_assessment"
+    hbase_output_table = "test_total_station_ability_assessment"
+    mysql = "jdbc:mysql://192.168.100.21/teacher?characterEncoding=UTF-8&transformedBitIsBoolean=false&tinyInt1isBit=false"
+    user = "root"
+    password = "unimob@12254ns"
 
 
     System.setProperty("HADOOP_USER_NAME", "root")
@@ -86,7 +86,7 @@ object AbilityAssessment3 {
 
     val conf = new SparkConf()
       .setAppName("AbilityAssessment3")
-//      .setMaster("local")
+      .setMaster("local[3]")
       .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
       .registerKryoClasses(Array(classOf[scala.collection.mutable.WrappedArray.ofRef[_]], classOf[AnswerCard]))
 
@@ -141,6 +141,8 @@ object AbilityAssessment3 {
         arr.iterator
     }.reduceByKey(_ + "," + _).collectAsMap())
 
+    println(subjetPoint.value)
+
     val subjetPointName = sc.broadcast(vkp.mapPartitions {
       ite: Iterator[Row] =>
 
@@ -153,7 +155,9 @@ object AbilityAssessment3 {
         }
         arr.iterator
     }.reduceByKey(_ + "," + _).collectAsMap())
+    println(subjetPointName.value)
 
+    import sparkSession.implicits._
 
     sparkSession.udf.register("predictedScore", new PredictedScore)
     val predicted_score = sparkSession.sql("" +
@@ -161,6 +165,18 @@ object AbilityAssessment3 {
       " from " + hive_input_table + " " +
       //      " where createTime='20181211' " +
       " group by userId,subject")
+      .filter {
+        r =>
+          val predictedScore = r.get(1).asInstanceOf[Seq[String]].seq
+          val exeNum = predictedScore(1).toLong
+
+          if (exeNum >= 60) {
+            true
+          } else {
+            false
+          }
+      }
+      .repartition(300)
 
     /**
       * 全站
@@ -223,7 +239,9 @@ object AbilityAssessment3 {
     val weekUndoNumZc = sc.longAccumulator("weekUndoNumZc")
     val weekUndoNumGa = sc.longAccumulator("weekUndoNumGa")
 
+
     predicted_score.cache()
+
     val ts_predicted_score_df = predicted_score.mapPartitions {
       ite =>
         var arr = new ArrayBuffer[TS_AbilityAssessment]()
@@ -276,7 +294,8 @@ object AbilityAssessment3 {
         }
         arr.iterator
     }.toDF()
-    println(ts_predicted_score_df.count())
+
+    ts_predicted_score_df.count()
 
     val _XcUCount = sc.broadcast(userCountXc.value.toString)
     val _XcQCount = sc.broadcast(qCountXc.value.toString)
@@ -435,15 +454,7 @@ object AbilityAssessment3 {
             weekTTotalGa.add(predictedScore(2).toLong)
             weekCNumGa.add(predictedScore(8).toLong)
           }
-          /*  userId: Long,
-            week_grade: Double,
-            week_predict_score: String,
-            subject: Int,
-            week_do_exercise_num: Long,
-            week_cumulative_time: Long,
-            week_correct_num: Long,
-            week_speek: Double,
-            week_accuracy: Double*/
+
 
           arr += Week_AbilityAssessment(
             userId, //userId
@@ -460,7 +471,8 @@ object AbilityAssessment3 {
         }
         arr.iterator
     }.toDF()
-    println(week_predicted_score_df.count())
+
+    week_predicted_score_df.count()
 
     val _XcWeekUCount = sc.broadcast(weekUCountXc.value.toString)
     val _XcWeekQCount = sc.broadcast(weekQCountXc.value.toString)
@@ -538,6 +550,7 @@ object AbilityAssessment3 {
           val exerciseNum = t.get(5).asInstanceOf[Long].longValue()
           val exerciseTime = t.get(6).asInstanceOf[Long].longValue()
 
+//          val put = new Put(Bytes.toBytes(rank + "-" + subject + "-2018-51")) //行健的值
           val put = new Put(Bytes.toBytes(rank + "-" + subject + "-" + TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis(), "yyyy-w"))) //行健的值
           put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("userId"), Bytes.toBytes(userId.toString))
           put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("grade"), Bytes.toBytes(grade.toString))
@@ -592,6 +605,7 @@ object AbilityAssessment3 {
           val week_accuracy = t.get(11).asInstanceOf[Double].doubleValue()
 
 
+//          val put = new Put(Bytes.toBytes(userId + "-" + subject + "-2018-51" )) //行健的值
           val put = new Put(Bytes.toBytes(userId + "-" + subject + "-" + TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis(), "yyyy-w"))) //行健的值
           put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("grade"), Bytes.toBytes(grade.toString))
           put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("predict_score"), Bytes.toBytes(predictScore.toString))
