@@ -106,26 +106,26 @@ object TimeUtils {
     dayNumOfWeek == 6 || dayNumOfWeek == 7
   }
 
-  def getWeekEndTimeStamp(): Long = {
-    convertDateStr2TimeStamp(TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis() - 14400000, "yyyy-w"), "yyyy-w") + 8 * 86400000L
-//    1545494400000L
-  }
-
   def getWeekStartTimeStamp(): Long = {
 
     convertDateStr2TimeStamp(TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis() - 14400000, "yyyy-w"), "yyyy-w") + 86400000L
-//    1544889600000L
+    //    1544889600000L
   }
 
+  def getWeekEndTimeStamp(): Long = {
+    convertDateStr2TimeStamp(TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis() - 14400000, "yyyy-w"), "yyyy-w") + 8 * 86400000L -1
+    //    1545494400000L
+  }
+
+
   def main(args: Array[String]): Unit = {
-    //    val a =TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis() , "yyyy-w").compareTo(TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis(), "yyyy-w"))
 
+    println(getWeekStartTimeStamp())
+    println(getWeekEndTimeStamp())
 
-    Bytes.toBytes(1)
-    Bytes.toBytes("1")
-    //    val tmp = convertDateStr2TimeStamp(TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis(), "yyyy-w"), "yyyy-w")
-    //
-    //    println(TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis(), "yyyy-w"))
-        println(getWeekStartTimeStamp)
+    println(TimeUtils.convertTimeStamp2DateStr(getWeekStartTimeStamp(), "yyyy-w"))
+    println(TimeUtils.convertTimeStamp2DateStr(getWeekEndTimeStamp(), "yyyy-w"))
+    println(TimeUtils.convertTimeStamp2DateStr(1546185600000L, "yyyy-w"))
+
   }
 }
