@@ -1,6 +1,8 @@
 package com.li.ability.assessment
 
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
 
 import com.li.ability.assessment.udaf.PredictedScore
 import org.apache.spark.SparkConf
@@ -51,7 +53,7 @@ object AbilityAssessment3 {
   def main(args: Array[String]): Unit = {
 
 
-    var hive_input_table = "ztk_answer_card"
+    var hive_input_table = "ztk_answer_card2"
     var weekTop10Table = "week_top10_ability_assessment"
     var weekTable = "week_ability_assessment"
     var hbase_output_table = "total_station_ability_assessment"
@@ -69,13 +71,13 @@ object AbilityAssessment3 {
       password = "unimob@12254ns"
     }
     //    //
-    hive_input_table = "zac2"
-    weekTop10Table = "test_week_top10_ability_assessment"
-    weekTable = "test_week_ability_assessment"
-    hbase_output_table = "test_total_station_ability_assessment"
-    mysql = "jdbc:mysql://192.168.100.21/teacher?characterEncoding=UTF-8&transformedBitIsBoolean=false&tinyInt1isBit=false"
-    user = "root"
-    password = "unimob@12254ns"
+    //        hive_input_table = "zac2"
+    //        weekTop10Table = "test_week_top10_ability_assessment"
+    //        weekTable = "test_week_ability_assessment"
+    //        hbase_output_table = "test_total_station_ability_assessment"
+    //        mysql = "jdbc:mysql://192.168.100.21/teacher?characterEncoding=UTF-8&transformedBitIsBoolean=false&tinyInt1isBit=false"
+    //        user = "root"
+    //        password = "unimob@12254ns"
 
 
     System.setProperty("HADOOP_USER_NAME", "root")
@@ -83,7 +85,7 @@ object AbilityAssessment3 {
 
     val conf = new SparkConf()
       .setAppName("AbilityAssessment3")
-      .setMaster("local[3]")
+      //      .setMaster("local[3]")
       .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
       .registerKryoClasses(Array(classOf[scala.collection.mutable.WrappedArray.ofRef[_]], classOf[AnswerCard]))
 
@@ -152,14 +154,21 @@ object AbilityAssessment3 {
     }.reduceByKey(_ + "," + _).collectAsMap())
     println(subjetPointName.value)
 
-    import sparkSession.implicits._
 
+    val sdf = new SimpleDateFormat("yyyyMMdd")
     val month = System.currentTimeMillis() - 30 * 24 * 60 * 60 * 1000L
+    //
+    //    val blus = sparkSession.sql("" +
+    //      " select distinct userId  " +
+    //      " from " + hive_input_table + "" +
+    //      " where createtime >= " + sdf.format(new Date(month)))
+    //
+    //    blus.show()
 
     val blackUser = sc.broadcast(sparkSession.sql("" +
       " select distinct userId  " +
       " from " + hive_input_table + "" +
-      " whhere createtime >= " + month).rdd.mapPartitions {
+      " where createtime >= " + sdf.format(new Date(month))).rdd.mapPartitions {
 
       ite: Iterator[Row] =>
         val arr = new ArrayBuffer[Long]()
@@ -171,7 +180,9 @@ object AbilityAssessment3 {
         }
         arr.iterator
     }.collect())
+    println(blackUser.value)
 
+    import sparkSession.implicits._
 
     sparkSession.udf.register("predictedScore", new PredictedScore)
     val predicted_score = sparkSession.sql("" +
@@ -180,7 +191,7 @@ object AbilityAssessment3 {
       " group by userId,subject")
       .filter {
         r =>
-          val userid = r.get(1).asInstanceOf[Long].longValue()
+          val userid = r.get(0).asInstanceOf[Long].longValue()
           val predictedScore = r.get(1).asInstanceOf[Seq[String]].seq
           val exeNum = predictedScore(1).toLong
           val bu = blackUser.value
@@ -196,7 +207,7 @@ object AbilityAssessment3 {
             false
           }
       }
-      .coalesce(100)
+      .coalesce(500)
 
     /**
       * 全站
@@ -313,7 +324,7 @@ object AbilityAssessment3 {
           )
         }
         arr.iterator
-    }.coalesce(100).toDF()
+    }.coalesce(500).toDF()
 
     ts_predicted_score_df.count()
 
@@ -523,7 +534,7 @@ object AbilityAssessment3 {
           )
         }
         arr.iterator
-    }.coalesce(100).toDF()
+    }.coalesce(500).toDF()
 
     week_predicted_score_df.count()
 
@@ -603,7 +614,7 @@ object AbilityAssessment3 {
           val exerciseNum = t.get(5).asInstanceOf[Long].longValue()
           val exerciseTime = t.get(6).asInstanceOf[Long].longValue()
 
-          //          val put = new Put(Bytes.toBytes(rank + "-" + subject + "-2018-51")) //行健的值
+          //          val put = new Put(Bytes.toBytes(rank + "-" + subject + "-2018-50")) //行健的值
           val put = new Put(Bytes.toBytes(rank + "-" + subject + "-" + TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis(), "yyyy-w"))) //行健的值
           put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("userId"), Bytes.toBytes(userId.toString))
           put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("grade"), Bytes.toBytes(grade.toString))
@@ -658,7 +669,7 @@ object AbilityAssessment3 {
           val week_accuracy = t.get(11).asInstanceOf[Double].doubleValue()
 
 
-          //          val put = new Put(Bytes.toBytes(userId + "-" + subject + "-2018-51" )) //行健的值
+          //          val put = new Put(Bytes.toBytes(userId + "-" + subject + "-2018-50")) //行健的值
           val put = new Put(Bytes.toBytes(userId + "-" + subject + "-" + TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis(), "yyyy-w"))) //行健的值
           put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("grade"), Bytes.toBytes(grade.toString))
           put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("predict_score"), Bytes.toBytes(predictScore.toString))
