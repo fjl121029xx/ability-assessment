@@ -463,7 +463,7 @@ object PredictedScore {
           map.getOrElse(642, (0, 1, 0, 0))._2 +
           map.getOrElse(754, (0, 1, 0, 0))._2
 
-        if (Num < 150) {
+        if (Num < 120) {
           defaultScore = 0
         } else {
           score += (20.0 / 135.0) * changshi * 100 +
@@ -491,7 +491,7 @@ object PredictedScore {
           map.getOrElse(3298, (0, 1, 0, 0))._2 * 1.0 +
           map.getOrElse(3332, (0, 1, 0, 0))._2 * 1.0
 
-        if (Num < 150) {
+        if (Num < 120 ){
           defaultScore = 0
         } else {
           score += correctNum / Num
@@ -518,7 +518,7 @@ object PredictedScore {
           map.getOrElse(36846, (0, 1, 0, 0))._2 * 1.0 +
           map.getOrElse(36831, (0, 1, 0, 0))._2 * 1.0
 
-        if (Num < 150) {
+        if (Num < 120) {
           defaultScore = 0
         } else {
           score += correctNum / Num
@@ -542,7 +542,7 @@ object PredictedScore {
           map.getOrElse(37101, (0, 1, 0, 0))._2 * 1.0 +
           map.getOrElse(37175, (0, 1, 0, 0))._2 * 1.0
 
-        if (Num < 150) {
+        if (Num < 120) {
           defaultScore = 0
         } else {
           score += correctNum / Num

@@ -3,9 +3,7 @@ package com.li.ability.assessment
 import java.io.File
 
 import com.li.ability.assessment.udaf.PredictedScore
-import com.li.ability.assessment.udaf.PredictedScore.getTSPredictScore2Map
-import org.apache.spark.{SparkConf, SparkContext}
-import com.mongodb.spark.config.ReadConfig
+import org.apache.spark.SparkConf
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.hbase.client.Put
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
@@ -13,7 +11,6 @@ import org.apache.hadoop.hbase.mapred.TableOutputFormat
 import org.apache.hadoop.hbase.util.Bytes
 import org.apache.hadoop.mapred.JobConf
 import org.apache.spark.sql.{Row, SparkSession}
-import org.apache.spark.storage.StorageLevel
 
 import scala.collection.mutable.{ArrayBuffer, Map}
 
@@ -72,13 +69,13 @@ object AbilityAssessment3 {
       password = "unimob@12254ns"
     }
     //    //
-    //    hive_input_table = "zac2"
-    //    weekTop10Table = "test_week_top10_ability_assessment"
-    //    weekTable = "test_week_ability_assessment"
-    //    hbase_output_table = "test_total_station_ability_assessment"
-    //    mysql = "jdbc:mysql://192.168.100.21/teacher?characterEncoding=UTF-8&transformedBitIsBoolean=false&tinyInt1isBit=false"
-    //    user = "root"
-    //    password = "unimob@12254ns"
+    hive_input_table = "zac2"
+    weekTop10Table = "test_week_top10_ability_assessment"
+    weekTable = "test_week_ability_assessment"
+    hbase_output_table = "test_total_station_ability_assessment"
+    mysql = "jdbc:mysql://192.168.100.21/teacher?characterEncoding=UTF-8&transformedBitIsBoolean=false&tinyInt1isBit=false"
+    user = "root"
+    password = "unimob@12254ns"
 
 
     System.setProperty("HADOOP_USER_NAME", "root")
@@ -86,7 +83,7 @@ object AbilityAssessment3 {
 
     val conf = new SparkConf()
       .setAppName("AbilityAssessment3")
-      //      .setMaster("local[3]")
+      .setMaster("local[3]")
       .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
       .registerKryoClasses(Array(classOf[scala.collection.mutable.WrappedArray.ofRef[_]], classOf[AnswerCard]))
 
@@ -124,8 +121,6 @@ object AbilityAssessment3 {
       " AND knowledge_subject.`status` = 1" +
       " WHERE" +
       "   knowledge.`level` = 1 ").rdd
-
-
     vkp.cache()
 
     val subjetPoint = sc.broadcast(vkp.mapPartitions {
@@ -159,18 +154,43 @@ object AbilityAssessment3 {
 
     import sparkSession.implicits._
 
+    val month = System.currentTimeMillis() - 30 * 24 * 60 * 60 * 1000L
+
+    val blackUser = sc.broadcast(sparkSession.sql("" +
+      " select distinct userId  " +
+      " from " + hive_input_table + "" +
+      " whhere createtime >= " + month).rdd.mapPartitions {
+
+      ite: Iterator[Row] =>
+        val arr = new ArrayBuffer[Long]()
+
+        while (ite.hasNext) {
+
+          val line = ite.next()
+          arr += line.getAs[Long](0)
+        }
+        arr.iterator
+    }.collect())
+
+
     sparkSession.udf.register("predictedScore", new PredictedScore)
     val predicted_score = sparkSession.sql("" +
       " select userId,predictedScore(correct,question,answerTime,point,createTime) predictedScore,subject " +
       " from " + hive_input_table + " " +
-      //      " where createTime='20181211' " +
       " group by userId,subject")
       .filter {
         r =>
+          val userid = r.get(1).asInstanceOf[Long].longValue()
           val predictedScore = r.get(1).asInstanceOf[Seq[String]].seq
           val exeNum = predictedScore(1).toLong
+          val bu = blackUser.value
+          if (exeNum >= 1) {
+            true
+          } else {
+            false
+          }
 
-          if (exeNum >= 60) {
+          if (bu.contains(userid)) {
             true
           } else {
             false
@@ -245,7 +265,7 @@ object AbilityAssessment3 {
     val ts_predicted_score_df = predicted_score.mapPartitions {
       ite =>
         var arr = new ArrayBuffer[TS_AbilityAssessment]()
-
+        val m = subjetPointName.value
 
         while (ite.hasNext) {
           val n = ite.next()
@@ -322,6 +342,26 @@ object AbilityAssessment3 {
     val _GaUndoNum = sc.broadcast(undoNumGa.value.toString)
 
     ts_predicted_score_df.createOrReplaceTempView("ts_predicted_score_df")
+
+    val numGroupByExeDay = sc.broadcast(sparkSession.sql("" +
+      " select  do_exercise_day as exeDay,count(*) " +
+      "from ts_predicted_score_df group by do_exercise_day order by do_exercise_day")
+      .rdd.mapPartitions {
+      ite: Iterator[Row] =>
+        val arr = new ArrayBuffer[(Long, Long)]()
+
+        while (ite.hasNext) {
+
+          val line = ite.next()
+
+          arr += Tuple2(line.getAs[Long](0), line.getAs[Long](1))
+        }
+
+        arr.iterator
+    }.collectAsMap())
+
+    println(numGroupByExeDay.value)
+
     val ts = sparkSession.sql("" +
       " select " +
       "userId," +
@@ -356,6 +396,9 @@ object AbilityAssessment3 {
         val sp = subjetPoint.value
         val spn = subjetPointName.value
 
+        val m = numGroupByExeDay.value
+
+
         while (ite.hasNext) {
           val t = ite.next()
 
@@ -371,6 +414,15 @@ object AbilityAssessment3 {
           val rank3 = t.get(9).asInstanceOf[Int].intValue()
           val rank4 = t.get(10).asInstanceOf[Int].intValue()
 
+          var count: Long = 0L
+          val passMan = m.foreach {
+            case (a: Long, b: Long) => {
+              if (do_exercise_day > a) {
+                count += b;
+              }
+            }
+          }
+
 
           val put = new Put(Bytes.toBytes(userId.toString + "-" + subject)) //行健的值
           put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("grade"), Bytes.toBytes(total_station_grade.toString))
@@ -385,6 +437,7 @@ object AbilityAssessment3 {
           put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("rank4"), Bytes.toBytes(rank4.toString))
           put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("sp"), Bytes.toBytes(sp.getOrElse(subject, "").toString))
           put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("spn"), Bytes.toBytes(spn.getOrElse(subject, "")))
+          put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("exeDayPassMan"), Bytes.toBytes(count.toString))
 
 
           if (subject == 1) {
