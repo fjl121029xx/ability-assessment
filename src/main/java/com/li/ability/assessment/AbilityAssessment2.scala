@@ -129,7 +129,8 @@ object AbilityAssessment2 {
             predictedScore(4).toLong, //do_exercise_day
             subject,
             predictedScore(7).toLong, //total_correct_num
-            predictedScore(9).toLong
+            predictedScore(9).toLong,
+            PredictedScore.getScore(predictedScore.head, subject)
           )
         }
         arr.iterator
@@ -187,7 +188,8 @@ object AbilityAssessment2 {
             predictedScore(8).toLong,
             predictedScore(6).toLong * 1.0 / predictedScore(5).toLong,
             predictedScore(8).toLong * 1.0 / predictedScore(5).toLong,
-            predictedScore(10).toLong
+            predictedScore(10).toLong,
+            PredictedScore.getScore(predictedScore(3), subject)
           )
         }
         arr.iterator

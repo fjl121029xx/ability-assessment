@@ -32,7 +32,8 @@ case class TS_AbilityAssessment(userId: Long,
                                 do_exercise_day: Long,
                                 subject: Int,
                                 total_correct_num: Long,
-                                total_undo_num: Long
+                                total_undo_num: Long,
+                                sortScore: Double
                                )
 
 case class Week_AbilityAssessment(userId: Long,
@@ -44,8 +45,8 @@ case class Week_AbilityAssessment(userId: Long,
                                   week_correct_num: Long,
                                   week_speek: Double,
                                   week_accuracy: Double,
-                                  week_undo_num: Long
-
+                                  week_undo_num: Long,
+                                  sortScore: Double
                                  )
 
 object AbilityAssessment3 {
@@ -217,6 +218,11 @@ object AbilityAssessment3 {
     val userCountGj = sc.longAccumulator("userCountGj")
     val userCountZc = sc.longAccumulator("userCountZc")
     val userCountGa = sc.longAccumulator("userCountGa")
+    // 合格用户
+    val qualifiedUserCountXc = sc.longAccumulator("qualifiedUserCountXc")
+    val qualifiedUserCountGj = sc.longAccumulator("qualifiedUserCountGj")
+    val qualifiedUserCountZc = sc.longAccumulator("qualifiedUserCountZc")
+    val qualifiedUserCountGa = sc.longAccumulator("qualifiedUserCountGa")
     // 统计科目下的做题数量
     val qCountXc = sc.longAccumulator("qCountXc")
     val qCountGj = sc.longAccumulator("qCountGj")
@@ -284,24 +290,47 @@ object AbilityAssessment3 {
           val predictedScore = n.get(1).asInstanceOf[Seq[String]].seq
           val subject = n.get(2).asInstanceOf[Int].intValue()
 
+          val score = PredictedScore.getScore(predictedScore(0), subject) //total_station_grade: Double,
+          val exeNum = predictedScore(1).toLong
+          val exeTime = predictedScore(2).toLong
+
+          val speed = exeTime * 1.0 / exeNum
+
+          var sortScore = score
+          if (score < 20.0) {
+            sortScore = 0.00
+          }
+
           if (subject == 1) {
             userCountXc.add(1)
             qCountXc.add(predictedScore(1).toLong)
             timeToltalXc.add(predictedScore(2).toLong)
             cNumXc.add(predictedScore(7).toLong)
             undoNumXc.add(predictedScore(9).toLong)
+
+            if (score >= 20.0) {
+              qualifiedUserCountXc.add(1)
+            }
           } else if (subject == 2) {
             userCountGj.add(1)
             qCountGj.add(predictedScore(1).toLong)
             timeTotalGj.add(predictedScore(2).toLong)
             cNumGj.add(predictedScore(7).toLong)
             undoNumGj.add(predictedScore(9).toLong)
+
+            if (score >= 20.0) {
+              qualifiedUserCountGj.add(1)
+            }
           } else if (subject == 3) {
             userCountZc.add(1)
             qCountZc.add(predictedScore(1).toLong)
             timeTotalZc.add(predictedScore(2).toLong)
             cNumZc.add(predictedScore(7).toLong)
             undoNumZc.add(predictedScore(9).toLong)
+
+            if (score >= 20.0) {
+              qualifiedUserCountZc.add(1)
+            }
           }
           else if (subject == 100100175) {
             userCountGa.add(1)
@@ -309,18 +338,23 @@ object AbilityAssessment3 {
             timeTotalGa.add(predictedScore(2).toLong)
             cNumGa.add(predictedScore(7).toLong)
             undoNumGa.add(predictedScore(9).toLong)
+
+            if (score >= 20.0) {
+              qualifiedUserCountGa.add(1)
+            }
           }
           //          println(userCountXc.value)
           arr += TS_AbilityAssessment(
             userId, //userId
-            PredictedScore.getScore(predictedScore(0), subject), //total_station_grade: Double,
+            score, //total_station_grade: Double,
             predictedScore(0), //total_station_predict_score
-            predictedScore(1).toLong, //do_exercise_num
-            predictedScore(2).toLong, //cumulative_time
+            exeNum, //do_exercise_num
+            exeTime, //cumulative_time
             predictedScore(4).toLong, //do_exercise_day
             subject,
             predictedScore(7).toLong, //total_correct_num
-            predictedScore(9).toLong //total_undo_num
+            predictedScore(9).toLong, //total_undo_num
+            sortScore
           )
         }
         arr.iterator
@@ -329,24 +363,28 @@ object AbilityAssessment3 {
     ts_predicted_score_df.count()
 
     val _XcUCount = sc.broadcast(userCountXc.value.toString)
+    val _XcQUCount = sc.broadcast(qualifiedUserCountXc.value.toString)
     val _XcQCount = sc.broadcast(qCountXc.value.toString)
     val _XcTTotal = sc.broadcast(timeToltalXc.value.toString)
     val _XcCNum = sc.broadcast(cNumXc.value.toString)
     val _XcUndoNum = sc.broadcast(undoNumXc.value.toString)
 
     val _GjUCount = sc.broadcast(userCountGj.value.toString)
+    val _GjQUCount = sc.broadcast(qualifiedUserCountGj.value.toString)
     val _GjQCOUNT = sc.broadcast(qCountGj.value.toString)
     val _GjTTotal = sc.broadcast(timeTotalGj.value.toString)
     val _GjCNum = sc.broadcast(cNumGj.value.toString)
     val _GjUndoNum = sc.broadcast(undoNumGj.value.toString)
 
     val _ZcUCount = sc.broadcast(userCountZc.value.toString)
+    val _ZcQUCount = sc.broadcast(qualifiedUserCountZc.value.toString)
     val _ZcQCount = sc.broadcast(qCountZc.value.toString)
     val _ZcTTotal = sc.broadcast(timeTotalZc.value.toString)
     val _ZcCNumt = sc.broadcast(cNumZc.value.toString)
     val _ZcUndoNum = sc.broadcast(undoNumZc.value.toString)
 
     val _GaUCount = sc.broadcast(userCountGa.value.toString)
+    val _GaQUCount = sc.broadcast(qualifiedUserCountGa.value.toString)
     val _GaQCount = sc.broadcast(qCountGa.value.toString)
     val _GaTTotal = sc.broadcast(timeTotalGa.value.toString)
     val _GaCNumt = sc.broadcast(cNumGa.value.toString)
@@ -382,10 +420,12 @@ object AbilityAssessment3 {
       "cumulative_time," +
       "do_exercise_day," +
       "subject," +
-      "Row_Number() OVER(partition by subject order by total_station_grade desc) rank," +
+      "Row_Number() OVER(partition by subject order by sortScore desc) rank," +
       "Row_Number() OVER(partition by subject order by do_exercise_day desc) rank2," +
       "Row_Number() OVER(partition by subject order by cumulative_time desc) rank3," +
-      "Row_Number() OVER(partition by subject order by do_exercise_num desc) rank4  " +
+      "Row_Number() OVER(partition by subject order by do_exercise_num desc) rank4, " +
+      "sortScore," +
+      "Row_Number() OVER(partition by subject order by total_station_grade desc) rank5 " +
       "from ts_predicted_score_df")
 
     val hbaseConf = HBaseConfiguration.create()
@@ -424,6 +464,8 @@ object AbilityAssessment3 {
           val rank2 = t.get(8).asInstanceOf[Int].intValue()
           val rank3 = t.get(9).asInstanceOf[Int].intValue()
           val rank4 = t.get(10).asInstanceOf[Int].intValue()
+          val sortScore = t.get(11).asInstanceOf[Double].doubleValue()
+          val rank5 = t.get(12).asInstanceOf[Int].intValue()
 
           var count: Long = 0L
           val passMan = m.foreach {
@@ -449,11 +491,14 @@ object AbilityAssessment3 {
           put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("sp"), Bytes.toBytes(sp.getOrElse(subject, "").toString))
           put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("spn"), Bytes.toBytes(spn.getOrElse(subject, "")))
           put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("exeDayPassMan"), Bytes.toBytes(count.toString))
+          put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("sortScore"), Bytes.toBytes(sortScore.toString))
+          put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("rank5"), Bytes.toBytes(rank5.toString))
 
 
           if (subject == 1) {
 
             put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("userCount"), Bytes.toBytes(_XcUCount.value))
+            put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("qualifiedUserCount"), Bytes.toBytes(_XcQUCount.value))
             put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("quesCount"), Bytes.toBytes(_XcQCount.value))
             put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("exerciseTimeTotal"), Bytes.toBytes(_XcTTotal.value))
             put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("correctNum"), Bytes.toBytes(_XcCNum.value))
@@ -461,6 +506,7 @@ object AbilityAssessment3 {
           } else if (subject == 2) {
 
             put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("userCount"), Bytes.toBytes(_GjUCount.value))
+            put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("qualifiedUserCount"), Bytes.toBytes(_GjQUCount.value))
             put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("quesCount"), Bytes.toBytes(_GjQCOUNT.value))
             put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("exerciseTimeTotal"), Bytes.toBytes(_GjTTotal.value))
             put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("correctNum"), Bytes.toBytes(_GjCNum.value))
@@ -468,6 +514,7 @@ object AbilityAssessment3 {
           } else if (subject == 3) {
 
             put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("userCount"), Bytes.toBytes(_ZcUCount.value))
+            put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("qualifiedUserCount"), Bytes.toBytes(_ZcQUCount.value))
             put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("quesCount"), Bytes.toBytes(_ZcQCount.value))
             put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("exerciseTimeTotal"), Bytes.toBytes(_ZcTTotal.value))
             put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("correctNum"), Bytes.toBytes(_ZcCNumt.value))
@@ -475,6 +522,7 @@ object AbilityAssessment3 {
           } else if (subject == 100100175) {
 
             put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("userCount"), Bytes.toBytes(_GaUCount.value))
+            put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("qualifiedUserCount"), Bytes.toBytes(_GaQUCount.value))
             put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("quesCount"), Bytes.toBytes(_GaQCount.value))
             put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("exerciseTimeTotal"), Bytes.toBytes(_GaTTotal.value))
             put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("correctNum"), Bytes.toBytes(_GaCNumt.value))
@@ -520,17 +568,27 @@ object AbilityAssessment3 {
           }
 
 
+          val exeNum = predictedScore(5).toLong
+          val exeTime = predictedScore(6).toLong
+          var sortScore = PredictedScore.getScore(predictedScore(3), subject)
+          val speed = predictedScore(6).toLong * 1.0 / predictedScore(5).toLong
+
+          if (exeNum < 300 || speed < 20.00) {
+            sortScore = 0.00
+          }
+
           arr += Week_AbilityAssessment(
             userId, //userId
             PredictedScore.getScore(predictedScore(3), subject), //week_grade
             predictedScore(3), // week_predict_score
             subject,
-            predictedScore(5).toLong,
-            predictedScore(6).toLong,
+            exeNum,
+            exeTime,
             predictedScore(8).toLong,
-            predictedScore(6).toLong * 1.0 / predictedScore(5).toLong,
+            speed,
             predictedScore(8).toLong * 1.0 / predictedScore(5).toLong,
-            predictedScore(10).toLong
+            predictedScore(10).toLong,
+            sortScore
           )
         }
         arr.iterator
@@ -570,18 +628,20 @@ object AbilityAssessment3 {
       "week_grade," +
       "week_predict_score," +
       "subject," +
-      "Row_Number() OVER(partition by subject order by week_grade desc) rank, " +
+      "Row_Number() OVER(partition by subject order by sortScore desc) rank, " +
       "week_do_exercise_num," +
       "week_cumulative_time," +
       "Row_Number() OVER(partition by subject order by week_do_exercise_num desc) rank2," +
       "Row_Number() OVER(partition by subject order by week_speek desc) rank3," +
       "Row_Number() OVER(partition by subject order by week_accuracy desc) rank4," +
       "week_speek," +
-      "week_accuracy " +
+      "week_accuracy," +
+      "sortScore " +
       "from week_predicted_score_df  ")
 
 
-    val weekTop10 = week.where("rank <= 10")
+    val weekTop10 = week.where("rank <= 100")
+    weekTop10.show(3000)
 
     val week_top10_hbaseConf = HBaseConfiguration.create()
     week_top10_hbaseConf.set("hbase.zookeeper.quorum", "192.168.100.68,192.168.100.70,192.168.100.72")
@@ -613,9 +673,9 @@ object AbilityAssessment3 {
           val rank = t.get(4).asInstanceOf[Int].intValue()
           val exerciseNum = t.get(5).asInstanceOf[Long].longValue()
           val exerciseTime = t.get(6).asInstanceOf[Long].longValue()
-
-          //          val put = new Put(Bytes.toBytes(rank + "-" + subject + "-2018-50")) //行健的值
-          val put = new Put(Bytes.toBytes(rank + "-" + subject + "-" + TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis(), "yyyy-w"))) //行健的值
+          val sortScore = t.get(12).asInstanceOf[Double].doubleValue()
+          val put = new Put(Bytes.toBytes(rank + "-" + subject + "-2018-51")) //行健的值
+          //          val put = new Put(Bytes.toBytes(rank + "-" + subject + "-" + TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis(), "yyyy-w"))) //行健的值
           put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("userId"), Bytes.toBytes(userId.toString))
           put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("grade"), Bytes.toBytes(grade.toString))
           put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("predict_score"), Bytes.toBytes(predictScore.toString))
@@ -623,6 +683,7 @@ object AbilityAssessment3 {
           put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("rank"), Bytes.toBytes(rank.toString))
           put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("exerciseNum"), Bytes.toBytes(exerciseNum.toString))
           put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("exerciseTime"), Bytes.toBytes(exerciseTime.toString))
+          put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("sortScore"), Bytes.toBytes(sortScore.toString))
 
 
           buffer += Tuple2(new ImmutableBytesWritable, put)
@@ -667,10 +728,11 @@ object AbilityAssessment3 {
           val rank4 = t.get(9).asInstanceOf[Int].intValue()
           val week_speek = t.get(10).asInstanceOf[Double].doubleValue()
           val week_accuracy = t.get(11).asInstanceOf[Double].doubleValue()
+          val sortScore = t.get(12).asInstanceOf[Double].doubleValue()
 
 
-          //          val put = new Put(Bytes.toBytes(userId + "-" + subject + "-2018-50")) //行健的值
-          val put = new Put(Bytes.toBytes(userId + "-" + subject + "-" + TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis(), "yyyy-w"))) //行健的值
+          val put = new Put(Bytes.toBytes(userId + "-" + subject + "-2018-51")) //行健的值
+          //          val put = new Put(Bytes.toBytes(userId + "-" + subject + "-" + TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis(), "yyyy-w"))) //行健的值
           put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("grade"), Bytes.toBytes(grade.toString))
           put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("predict_score"), Bytes.toBytes(predictScore.toString))
           put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("subject"), Bytes.toBytes(subject.toString))
@@ -684,6 +746,7 @@ object AbilityAssessment3 {
           put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("week_accuracy"), Bytes.toBytes(week_accuracy.toString))
           put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("sp"), Bytes.toBytes(sp.getOrElse(subject, "").toString))
           put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("spn"), Bytes.toBytes(spn.getOrElse(subject, "")))
+          put.addColumn(Bytes.toBytes("ability_assessment_info"), Bytes.toBytes("sortScore"), Bytes.toBytes(sortScore.toString))
 
           if (subject == 1) {
 
