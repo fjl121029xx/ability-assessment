@@ -67,9 +67,12 @@ object AbilityAssessment3 {
       weekTop10Table = args(1)
       weekTable = args(2)
       hbase_output_table = args(3)
-      mysql = "jdbc:mysql://192.168.100.21/teacher?characterEncoding=UTF-8&transformedBitIsBoolean=false&tinyInt1isBit=false"
-      user = "root"
-      password = "unimob@12254ns"
+      if (hive_input_table.eq("zac2")) {
+        mysql = "jdbc:mysql://192.168.100.21/teacher?characterEncoding=UTF-8&transformedBitIsBoolean=false&tinyInt1isBit=false"
+        user = "root"
+        password = "unimob@12254ns"
+      }
+
     }
     //    //
     //        hive_input_table = "zac2"
@@ -545,51 +548,57 @@ object AbilityAssessment3 {
           val predictedScore = n.get(1).asInstanceOf[Seq[String]].seq
           val subject = n.get(2).asInstanceOf[Int].intValue()
 
-          if (subject == 1) {
-            weekUCountXc.add(1)
-            weekQCountXc.add(predictedScore(1).toLong)
-            weekTTotalXc.add(predictedScore(2).toLong)
-            weekCNumXc.add(predictedScore(8).toLong)
-          } else if (subject == 2) {
-            weekUCountGj.add(1)
-            weekQCountGj.add(predictedScore(1).toLong)
-            weekTTotalGj.add(predictedScore(2).toLong)
-            weekCNumGj.add(predictedScore(8).toLong)
-          } else if (subject == 3) {
-            weekUCountZc.add(1)
-            weekQCountZc.add(predictedScore(1).toLong)
-            weekTTotalZc.add(predictedScore(2).toLong)
-            weekCNumZc.add(predictedScore(8).toLong)
-          } else if (subject == 100100175) {
-            weekUCountGa.add(1)
-            weekQCountGa.add(predictedScore(1).toLong)
-            weekTTotalGa.add(predictedScore(2).toLong)
-            weekCNumGa.add(predictedScore(8).toLong)
-          }
-
-
           val exeNum = predictedScore(5).toLong
           val exeTime = predictedScore(6).toLong
           var sortScore = PredictedScore.getScore(predictedScore(3), subject)
           val speed = predictedScore(6).toLong * 1.0 / predictedScore(5).toLong
 
-          if (exeNum < 300 || speed < 20.00) {
-            sortScore = 0.00
+          val allExeNum = predictedScore(1).toLong
+          val allExeTime = predictedScore(2).toLong
+
+          if (exeNum > 0) {
+            if (subject == 1) {
+              weekUCountXc.add(1)
+              weekQCountXc.add(predictedScore(5).toLong)
+              weekTTotalXc.add(predictedScore(6).toLong)
+              weekCNumXc.add(predictedScore(8).toLong)
+            } else if (subject == 2) {
+              weekUCountGj.add(1)
+              weekQCountGj.add(predictedScore(5).toLong)
+              weekTTotalGj.add(predictedScore(6).toLong)
+              weekCNumGj.add(predictedScore(8).toLong)
+            } else if (subject == 3) {
+              weekUCountZc.add(1)
+              weekQCountZc.add(predictedScore(5).toLong)
+              weekTTotalZc.add(predictedScore(6).toLong)
+              weekCNumZc.add(predictedScore(8).toLong)
+            } else if (subject == 100100175) {
+              weekUCountGa.add(1)
+              weekQCountGa.add(predictedScore(5).toLong)
+              weekTTotalGa.add(predictedScore(6).toLong)
+              weekCNumGa.add(predictedScore(8).toLong)
+            }
+
+            if (allExeNum < 300 || (allExeTime * 1.0) / allExeNum < 20.00) {
+              sortScore = 0.00
+            }
+
+            arr += Week_AbilityAssessment(
+              userId, //userId
+              PredictedScore.getScore(predictedScore(3), subject), //week_grade
+              predictedScore(3), // week_predict_score
+              subject,
+              exeNum,
+              exeTime,
+              predictedScore(8).toLong,
+              speed,
+              predictedScore(8).toLong * 1.0 / predictedScore(5).toLong,
+              predictedScore(10).toLong,
+              sortScore
+            )
           }
 
-          arr += Week_AbilityAssessment(
-            userId, //userId
-            PredictedScore.getScore(predictedScore(3), subject), //week_grade
-            predictedScore(3), // week_predict_score
-            subject,
-            exeNum,
-            exeTime,
-            predictedScore(8).toLong,
-            speed,
-            predictedScore(8).toLong * 1.0 / predictedScore(5).toLong,
-            predictedScore(10).toLong,
-            sortScore
-          )
+
         }
         arr.iterator
     }.coalesce(500).toDF()
@@ -729,7 +738,6 @@ object AbilityAssessment3 {
           val week_speek = t.get(10).asInstanceOf[Double].doubleValue()
           val week_accuracy = t.get(11).asInstanceOf[Double].doubleValue()
           val sortScore = t.get(12).asInstanceOf[Double].doubleValue()
-
 
           val put = new Put(Bytes.toBytes(userId + "-" + subject + "-2018-51")) //行健的值
           //          val put = new Put(Bytes.toBytes(userId + "-" + subject + "-" + TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis(), "yyyy-w"))) //行健的值

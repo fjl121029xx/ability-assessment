@@ -359,8 +359,17 @@ class PredictedScore extends UserDefinedAggregateFunction {
     val total_undo_num = buffer.get(10).asInstanceOf[Long].longValue()
     val week_undo_num = buffer.get(11).asInstanceOf[Long].longValue()
 
+    val grade = total_station_predict_score.split("_").filter{
+      line =>
+       if( line.split(":").head.eq("-1") || line.split(":").head.eq("0")){
+         false
+       } else {
+         true
+       }
+    }.mkString("_")
+
     Array(
-      total_station_predict_score.replaceAll("-1:0:0:0:0_", ""),
+      grade,
       do_exercise_num.toString,
       cumulative_time.toString,
       week_predict_score.toString,
