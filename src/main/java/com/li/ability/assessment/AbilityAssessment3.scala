@@ -79,13 +79,13 @@ object AbilityAssessment3 {
 
     }
     //    //
-    //    hive_input_table = "zac2"
-    //    weekTop10Table = "test_week_top10_ability_assessment"
-    //    weekTable = "test_week_ability_assessment"
-    //    hbase_output_table = "test_total_station_ability_assessment"
-    //    mysql = "jdbc:mysql://192.168.100.21/teacher?characterEncoding=UTF-8&transformedBitIsBoolean=false&tinyInt1isBit=false"
-    //    user = "root"
-    //    password = "unimob@12254ns"
+//    dataSource = "zac2"
+//    t_weekTop = "test_week_top10_ability_assessment"
+//    t_week = "test_week_ability_assessment"
+//    t_all = "test_total_station_ability_assessment"
+//    mysql = "jdbc:mysql://192.168.100.21/teacher?characterEncoding=UTF-8&transformedBitIsBoolean=false&tinyInt1isBit=false"
+//    user = "root"
+//    password = "unimob@12254ns"
 
 
     System.setProperty("HADOOP_USER_NAME", "root")
@@ -93,7 +93,7 @@ object AbilityAssessment3 {
 
     val conf = new SparkConf()
       .setAppName("AbilityAssessment3")
-      //            .setMaster("local[3]")
+//                  .setMaster("local[3]")
       .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
       .registerKryoClasses(Array(classOf[scala.collection.mutable.WrappedArray.ofRef[_]], classOf[AnswerCard]))
 
@@ -434,6 +434,11 @@ object AbilityAssessment3 {
       "sortScore," +
       "Row_Number() OVER(partition by subject order by total_station_grade desc) rank5 " +
       "from ts_predicted_score_df")
+
+
+    val tsTop10 = ts.where("rank <= 1000")
+    tsTop10.show(30000)
+
 
     val hbaseConf = HBaseConfiguration.create()
     hbaseConf.set("hbase.zookeeper.quorum", "192.168.100.68,192.168.100.70,192.168.100.72")
