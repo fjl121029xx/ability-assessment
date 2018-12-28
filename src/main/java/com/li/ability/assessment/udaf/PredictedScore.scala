@@ -168,7 +168,6 @@ class PredictedScore extends UserDefinedAggregateFunction {
 
     // 做题数量
     val questions = input.getSeq[Int](1)
-
     val quesArr = new ArrayBuffer[Int]()
     buffer.getAs[Seq[Int]](1).foreach(quesArr += _)
     questions.zip(corrects).foreach {
@@ -178,16 +177,22 @@ class PredictedScore extends UserDefinedAggregateFunction {
         }
       }
     }
-
     //do_exercise_num
     buffer.update(1, quesArr)
 
     // 获得输入的做题时间
-    var cumulativeTime = buffer.get(2).asInstanceOf[Int].intValue()
-    input.getSeq[Int](2).toArray.foreach(f =>
-      cumulativeTime += f.intValue()
-    )
     //cumulative_time
+    var cumulativeTime = buffer.get(2).asInstanceOf[Int].intValue()
+//    input.getSeq[Int](2).toArray.foreach(f =>
+//      cumulativeTime += f.intValue()
+//    )
+    times.zip(corrects).foreach {
+      case (a, b) => {
+        if (b == 1 || b == 2) {
+          cumulativeTime += a
+        }
+      }
+    }
     buffer.update(2, cumulativeTime)
     val format = new SimpleDateFormat("yyyyMMdd")
     //createTimeHBaseUtil
