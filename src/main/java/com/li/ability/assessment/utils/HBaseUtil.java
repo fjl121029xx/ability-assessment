@@ -97,15 +97,15 @@ public class HBaseUtil {
 
         Configuration conf = HBaseConfiguration.create();
 //        conf.set("hbase.zookeeper.quorum", "192.168.100.68,192.168.100.70,192.168.100.72");
-        conf.set("hbase.zookeeper.quorum", "192.168.100.27,192.168.100.28,192.168.100.29");
+        conf.set("hbase.zookeeper.quorum", "192.168.100.68,192.168.100.70,192.168.100.72");
         conf.set("hbase.zookeeper.property.clientPort", "2181");
         conf.set("hbase.rootdir", "/hbase");
 
         HBaseAdmin admin = new HBaseAdmin(conf);
         //playinfo   videoplay2
-        HTableDescriptor table = new HTableDescriptor("videoplay2");
-        HColumnDescriptor columnFamily = new HColumnDescriptor("playinfo");
-        columnFamily.setMaxVersions(10);
+        HTableDescriptor table = new HTableDescriptor("weekTop_assessment_report");
+        HColumnDescriptor columnFamily = new HColumnDescriptor("reportInfo");
+        columnFamily.setMaxVersions(24);
         table.addFamily(columnFamily);
         admin.createTable(table);
 

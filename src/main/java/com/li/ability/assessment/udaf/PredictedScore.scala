@@ -95,7 +95,14 @@ class PredictedScore extends UserDefinedAggregateFunction {
     // 记录本次update 知识点下的正确树立
     var mutmap = Map[Int, (Int, Int, Int, Int)]()
     // points.zip(corrects)
-    points.zip(corrects).zip(times)
+    points.zip(corrects).zip(times).filter {
+      t: ((Int, Int), Int) =>
+        if (t._1._1 == 0) {
+          false
+        } else {
+          true
+        }
+    }
       .foreach { f =>
         val t = mutmap.getOrElse(f._1._1, (0, 0, 0, 0))
 
@@ -108,8 +115,8 @@ class PredictedScore extends UserDefinedAggregateFunction {
           mutmap += (f._1._1 -> (correct, total, tim, undo))
 
         }
-//
-        else if (f._1._2 == 2){
+        //
+        else if (f._1._2 == 2) {
           val correct = t._1
           val total = t._2 + 1
           val tim = t._3 + f._2
@@ -164,9 +171,9 @@ class PredictedScore extends UserDefinedAggregateFunction {
 
     val quesArr = new ArrayBuffer[Int]()
     buffer.getAs[Seq[Int]](1).foreach(quesArr += _)
-    questions.zip(corrects).foreach{
-      case (a,b) =>{
-        if (b == 1 ||b==2){
+    questions.zip(corrects).foreach {
+      case (a, b) => {
+        if (b == 1 || b == 2) {
           quesArr += a
         }
       }
@@ -243,9 +250,9 @@ class PredictedScore extends UserDefinedAggregateFunction {
 
       val questions = input.getSeq[Int](1)
 
-      questions.zip(corrects).foreach{
-        case (a,b) =>{
-          if (b == 1 ||b==2){
+      questions.zip(corrects).foreach {
+        case (a, b) => {
+          if (b == 1 || b == 2) {
             weekQuesArr += a
           }
         }
@@ -359,13 +366,13 @@ class PredictedScore extends UserDefinedAggregateFunction {
     val total_undo_num = buffer.get(10).asInstanceOf[Long].longValue()
     val week_undo_num = buffer.get(11).asInstanceOf[Long].longValue()
 
-    val grade = total_station_predict_score.split("_").filter{
+    val grade = total_station_predict_score.split("_").filter {
       line =>
-       if( line.split(":").head.eq("-1") || line.split(":").head.eq("0")){
-         false
-       } else {
-         true
-       }
+        if (line.split(":").head.eq("-1") || line.split(":").head.eq("0")) {
+          false
+        } else {
+          true
+        }
     }.mkString("_")
 
     Array(
@@ -500,7 +507,7 @@ object PredictedScore {
           map.getOrElse(3298, (0, 1, 0, 0))._2 * 1.0 +
           map.getOrElse(3332, (0, 1, 0, 0))._2 * 1.0
 
-        if (Num < 120 ){
+        if (Num < 120) {
           defaultScore = 0
         } else {
           score += correctNum / Num
@@ -571,7 +578,7 @@ object PredictedScore {
     val format = "2817632665"
 
 
-    print( getScore("-1:0:0:0:0_642:20:80:81:0_435:24:80:103:0_482:6:30:36:0_392:12:41:45:0_754:8:39:54:0",1))
+    print(getScore("-1:0:0:0:0_642:20:80:81:0_435:24:80:103:0_482:6:30:36:0_392:12:41:45:0_754:8:39:54:0", 1))
   }
 
   //  def main(args: Array[String]): Unit = {
