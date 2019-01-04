@@ -93,7 +93,7 @@ object AbilityAssessment3 {
 
     val conf = new SparkConf()
       .setAppName("AbilityAssessment3")
-//                  .setMaster("local[3]")
+                  .setMaster("local[3]")
       .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
       .registerKryoClasses(Array(classOf[scala.collection.mutable.WrappedArray.ofRef[_]], classOf[AnswerCard]))
 
@@ -196,6 +196,7 @@ object AbilityAssessment3 {
     val predicted_score = sparkSession.sql("" +
       " select userId,predictedScore(correct,question,answerTime,point,createTime) predictedScore,subject " +
       " from " + dataSource + " " +
+      " where createTime<='20181230' and createTime>='20181224' and userId=234964707 and subject=2" +
       " group by userId,subject")
       .filter {
         r =>
@@ -545,7 +546,7 @@ object AbilityAssessment3 {
         }
         buffer.iterator
     }
-    ts_hbasePar.saveAsHadoopDataset(total_station_jobConf)
+//    ts_hbasePar.saveAsHadoopDataset(total_station_jobConf)
 
 
     val week_predicted_score_df = predicted_score.mapPartitions {
@@ -692,8 +693,8 @@ object AbilityAssessment3 {
           val exerciseNum = t.get(5).asInstanceOf[Long].longValue()
           val exerciseTime = t.get(6).asInstanceOf[Long].longValue()
           val sortScore = t.get(12).asInstanceOf[Double].doubleValue()
-          //          val put = new Put(Bytes.toBytes(rank + "-" + subject + "-2018-51")) //行健的值
-          val put = new Put(Bytes.toBytes(rank + "-" + subject + "-" + TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis(), "yyyy-w"))) //行健的值
+                    val put = new Put(Bytes.toBytes(rank + "-" + subject + "-2018-52")) //行健的值
+//          val put = new Put(Bytes.toBytes(rank + "-" + subject + "-" + TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis(), "yyyy-w"))) //行健的值
           put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("userId"), Bytes.toBytes(userId.toString))
           put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("grade"), Bytes.toBytes(grade.toString))
           put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("predict_score"), Bytes.toBytes(predictScore.toString))
@@ -709,7 +710,7 @@ object AbilityAssessment3 {
         buffer.iterator
     }
 
-    week_top10_hbasePar.saveAsHadoopDataset(week_top10_jobConf)
+//    week_top10_hbasePar.saveAsHadoopDataset(week_top10_jobConf)
 
 
     val week_hbaseConf = HBaseConfiguration.create()
@@ -748,8 +749,8 @@ object AbilityAssessment3 {
           val week_accuracy = t.get(11).asInstanceOf[Double].doubleValue()
           val sortScore = t.get(12).asInstanceOf[Double].doubleValue()
 
-          //          val put = new Put(Bytes.toBytes(userId + "-" + subject + "-2018-51")) //行健的值
-          val put = new Put(Bytes.toBytes(userId + "-" + subject + "-" + TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis(), "yyyy-w"))) //行健的值
+                    val put = new Put(Bytes.toBytes(userId + "-" + subject + "-2018-52")) //行健的值
+//          val put = new Put(Bytes.toBytes(userId + "-" + subject + "-" + TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis(), "yyyy-w"))) //行健的值
           put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("grade"), Bytes.toBytes(grade.toString))
           put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("predict_score"), Bytes.toBytes(predictScore.toString))
           put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("subject"), Bytes.toBytes(subject.toString))

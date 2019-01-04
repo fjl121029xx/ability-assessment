@@ -108,14 +108,14 @@ object TimeUtils {
 
   def getWeekStartTimeStamp(): Long = {
 
-    convertDateStr2TimeStamp(TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis() - 14400000, "yyyy-w"), "yyyy-w") + 86400000L
-    //        1544371200000L
+//    convertDateStr2TimeStamp(TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis() - 14400000, "yyyy-w"), "yyyy-w") + 86400000L
+    1545580800000L
     //    1544976000000L
   }
 
   def getWeekEndTimeStamp(): Long = {
-    convertDateStr2TimeStamp(TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis() - 14400000, "yyyy-w"), "yyyy-w") + 8 * 86400000L - 1
-    //        1544976000000L - 1L
+//    convertDateStr2TimeStamp(TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis() - 14400000, "yyyy-w"), "yyyy-w") + 8 * 86400000L - 1
+    1546185600000L - 1L
     //    1545580800000L - 1L
   }
 

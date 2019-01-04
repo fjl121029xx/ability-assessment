@@ -103,8 +103,8 @@ public class HBaseUtil {
 
         HBaseAdmin admin = new HBaseAdmin(conf);
         //playinfo   videoplay2
-        HTableDescriptor table = new HTableDescriptor("weekTop_assessment_report");
-        HColumnDescriptor columnFamily = new HColumnDescriptor("reportInfo");
+        HTableDescriptor table = new HTableDescriptor("cuoti_report");
+        HColumnDescriptor columnFamily = new HColumnDescriptor("report_info");
         columnFamily.setMaxVersions(24);
         table.addFamily(columnFamily);
         admin.createTable(table);
