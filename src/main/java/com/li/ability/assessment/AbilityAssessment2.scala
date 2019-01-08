@@ -122,7 +122,7 @@ object AbilityAssessment2 {
 
           arr += TS_AbilityAssessment(
             userId, //userId
-            PredictedScore.getScore(predictedScore.head, subject), //total_station_grade: Double,
+            PredictedScore.getScore(predictedScore.head, subject,0), //total_station_grade: Double,
             predictedScore.head, //total_station_predict_score
             predictedScore(1).toLong, //do_exercise_num
             predictedScore(2).toLong, //cumulative_time
@@ -130,7 +130,7 @@ object AbilityAssessment2 {
             subject,
             predictedScore(7).toLong, //total_correct_num
             predictedScore(9).toLong,
-            PredictedScore.getScore(predictedScore.head, subject)
+            PredictedScore.getScore(predictedScore.head, subject,0)
           )
         }
         arr.iterator
@@ -180,7 +180,7 @@ object AbilityAssessment2 {
 
           arr += Week_AbilityAssessment(
             userId, //userId
-            PredictedScore.getScore(predictedScore(3), subject), //week_grade
+            PredictedScore.getScore(predictedScore(3), subject,1), //week_grade
             predictedScore(3), // week_predict_score
             subject,
             predictedScore(5).toLong,
@@ -189,7 +189,7 @@ object AbilityAssessment2 {
             predictedScore(6).toLong * 1.0 / predictedScore(5).toLong,
             predictedScore(8).toLong * 1.0 / predictedScore(5).toLong,
             predictedScore(10).toLong,
-            PredictedScore.getScore(predictedScore(3), subject)
+            PredictedScore.getScore(predictedScore(3), subject,1)
           )
         }
         arr.iterator

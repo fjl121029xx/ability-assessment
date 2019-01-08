@@ -183,9 +183,9 @@ class PredictedScore extends UserDefinedAggregateFunction {
     // 获得输入的做题时间
     //cumulative_time
     var cumulativeTime = buffer.get(2).asInstanceOf[Int].intValue()
-//    input.getSeq[Int](2).toArray.foreach(f =>
-//      cumulativeTime += f.intValue()
-//    )
+    //    input.getSeq[Int](2).toArray.foreach(f =>
+    //      cumulativeTime += f.intValue()
+    //    )
     times.zip(corrects).foreach {
       case (a, b) => {
         if (b == 1 || b == 2) {
@@ -465,7 +465,7 @@ object PredictedScore {
     * @param _type
     * @return
     */
-  def getScore(grade: String, _type: Int): Double = {
+  def getScore(grade: String, _type: Int, isWeek: Int): Double = {
     var defaultScore = 0.0
     var map = getTSPredictScore2Map(grade)
     _type match {
@@ -484,7 +484,7 @@ object PredictedScore {
           map.getOrElse(642, (0, 1, 0, 0))._2 +
           map.getOrElse(754, (0, 1, 0, 0))._2
 
-        if (Num < 120) {
+        if (isWeek == 0 && Num < 120) {
           defaultScore = 0
         } else {
           score += (20.0 / 135.0) * changshi * 100 +
@@ -512,7 +512,7 @@ object PredictedScore {
           map.getOrElse(3298, (0, 1, 0, 0))._2 * 1.0 +
           map.getOrElse(3332, (0, 1, 0, 0))._2 * 1.0
 
-        if (Num < 120) {
+        if (isWeek == 0 && Num < 120) {
           defaultScore = 0
         } else {
           score += correctNum / Num
@@ -539,7 +539,7 @@ object PredictedScore {
           map.getOrElse(36846, (0, 1, 0, 0))._2 * 1.0 +
           map.getOrElse(36831, (0, 1, 0, 0))._2 * 1.0
 
-        if (Num < 120) {
+        if (isWeek == 0 && Num < 120) {
           defaultScore = 0
         } else {
           score += correctNum / Num
@@ -563,7 +563,7 @@ object PredictedScore {
           map.getOrElse(37101, (0, 1, 0, 0))._2 * 1.0 +
           map.getOrElse(37175, (0, 1, 0, 0))._2 * 1.0
 
-        if (Num < 120) {
+        if (isWeek == 0 && Num < 120) {
           defaultScore = 0
         } else {
           score += correctNum / Num
@@ -583,7 +583,7 @@ object PredictedScore {
     val format = "2817632665"
 
 
-    print(getScore("-1:0:0:0:0_435:3:15:15:0", 1))
+    print(getScore("435:6:15:196:0_392:10:26:141:0_754:2:4:175:0", 1, 1))
   }
 
 
