@@ -1,7 +1,7 @@
 package com.li.ability.assessment
 
 import java.text.SimpleDateFormat
-import java.util.{Calendar, Date}
+import java.util.{Calendar, Date, GregorianCalendar}
 
 import org.joda.time.DateTime
 import com.github.nscala_time.time.Imports._
@@ -108,26 +108,93 @@ object TimeUtils {
 
   def getWeekStartTimeStamp(): Long = {
 
-//    convertDateStr2TimeStamp(TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis() - 14400000, "yyyy-w"), "yyyy-w") + 86400000L
-    1546185600000L
-    //    1544976000000L
+    convertDateStr2TimeStamp(TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis() - 14400000, "yyyy-w"), "yyyy-w") + 86400000L
+    //        1546185600000L
+    //    1545580800000L
   }
 
   def getWeekEndTimeStamp(): Long = {
-//    convertDateStr2TimeStamp(TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis() - 14400000, "yyyy-w"), "yyyy-w") + 8 * 86400000L - 1
-    1546790400000L - 1L
-    //    1545580800000L - 1L
+    convertDateStr2TimeStamp(TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis() - 14400000, "yyyy-w"), "yyyy-w") + 8 * 86400000L - 1
+    //        1546790400000L - 1L
+    //    1546185600000L - 1L
+  }
+
+  def parseLong(s: String): Option[Long] = try {
+    Some(s.toLong)
+  } catch {
+    case _ => None
+  }
+
+
+  def getWeekStart(): Long = {
+
+    val today = TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis() - 14400000, "yyyyMMdd")
+    val currentDate = new GregorianCalendar
+    currentDate.setTime(new SimpleDateFormat("yyyyMMdd").parse(today))
+    currentDate.setFirstDayOfWeek(Calendar.MONDAY)
+    currentDate.set(Calendar.HOUR_OF_DAY, 0)
+    currentDate.set(Calendar.MINUTE, 0)
+    currentDate.set(Calendar.SECOND, 0)
+    currentDate.set(Calendar.MILLISECOND, 0)
+    currentDate.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+
+    currentDate.getTime.getTime
+    //    val time = currentDate.getTime.getTime
+    //    var s = time.toString()
+    //    s = s.substring(0, s.length - 3) + "000"
+    //    parseLong(s).getOrElse(Long.MinValue)
+  }
+
+  def getWeekend(): Long = {
+
+    val today = TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis() - 14400000, "yyyyMMdd")
+    val currentDate = new GregorianCalendar
+    currentDate.setTime(new SimpleDateFormat("yyyyMMdd").parse(today))
+    currentDate.setFirstDayOfWeek(Calendar.MONDAY)
+    currentDate.set(Calendar.HOUR_OF_DAY, 23)
+    currentDate.set(Calendar.MINUTE, 59)
+    currentDate.set(Calendar.SECOND, 59)
+    currentDate.set(Calendar.MILLISECOND, 0)
+    currentDate.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY)
+
+    currentDate.getTime.getTime
+    //    val time = currentDate.getTime.getTime
+    //    var s = time.toString()
+    //    s = s.substring(0, s.length - 3) + "000"
+    //    parseLong(s).getOrElse(Long.MaxValue)
+  }
+
+  def getWeek(): String = {
+
+    import java.util.Calendar
+    val calendar = Calendar.getInstance
+    calendar.setFirstDayOfWeek(Calendar.MONDAY)
+
+    //    calendar.setTime(new Nothing)
+
+
+    return calendar.get(Calendar.YEAR) + "-" + calendar.get(Calendar.WEEK_OF_YEAR)
   }
 
 
   def main(args: Array[String]): Unit = {
 
-    println(getWeekStartTimeStamp())
-    println(getWeekEndTimeStamp())
+    //    println(getWeekStartTimeStamp())
+    //    println(getWeekEndTimeStamp())
+    //
+    //    println(TimeUtils.convertTimeStamp2DateStr(getWeekStartTimeStamp(), "yyyy-w"))
+    //    println(TimeUtils.convertTimeStamp2DateStr(getWeekEndTimeStamp(), "yyyy-w"))
+    //    println(TimeUtils.convertTimeStamp2DateStr(1546185600000L, "yyyy-w"))
+    //
+    //
+    //    TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis(), "w")
+    //
+    //    val a = TimeUtils.convertDateStr2TimeStamp(TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis(), "w"), "w")
+    //    println(a)
 
-    println(TimeUtils.convertTimeStamp2DateStr(getWeekStartTimeStamp(), "yyyy-w"))
-    println(TimeUtils.convertTimeStamp2DateStr(getWeekEndTimeStamp(), "yyyy-w"))
-    println(TimeUtils.convertTimeStamp2DateStr(1546185600000L, "yyyy-w"))
 
+    println(getWeekStart())
+    println(getWeekend())
+    println(getWeek())
   }
 }

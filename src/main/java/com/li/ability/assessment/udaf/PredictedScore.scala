@@ -207,8 +207,8 @@ class PredictedScore extends UserDefinedAggregateFunction {
       }
     }
 
-    val week_start: Long = TimeUtils.getWeekStartTimeStamp()
-    val week_end: Long = TimeUtils.getWeekEndTimeStamp()
+    val week_start: Long = TimeUtils.getWeekStart()
+    val week_end: Long = TimeUtils.getWeekend()
 
     var week_correct_num = buffer.get(9).asInstanceOf[Long].longValue()
     var week_undo_num = buffer.get(11).asInstanceOf[Long].longValue()

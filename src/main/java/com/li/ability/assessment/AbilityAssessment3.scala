@@ -438,7 +438,7 @@ object AbilityAssessment3 {
 
 
     val tsTop10 = ts.where("rank <= 1000")
-    tsTop10.show(30000)
+//    tsTop10.show(30000)
 
 
     val hbaseConf = HBaseConfiguration.create()
@@ -661,7 +661,7 @@ object AbilityAssessment3 {
 
 
     val weekTop10 = week.where("rank <= 1000")
-    weekTop10.show(30000)
+//    weekTop10.show(30000)
 
     val week_top10_hbaseConf = HBaseConfiguration.create()
     week_top10_hbaseConf.set("hbase.zookeeper.quorum", "192.168.100.68,192.168.100.70,192.168.100.72")
@@ -692,8 +692,10 @@ object AbilityAssessment3 {
           val exerciseNum = t.get(5).asInstanceOf[Long].longValue()
           val exerciseTime = t.get(6).asInstanceOf[Long].longValue()
           val sortScore = t.get(12).asInstanceOf[Double].doubleValue()
-          val put = new Put(Bytes.toBytes(rank + "-" + subject + "-2019-1")) //行健的值
-          //          val put = new Put(Bytes.toBytes(rank + "-" + subject + "-" + TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis(), "yyyy-w"))) //行健的值
+
+
+          //          val put = new Put(Bytes.toBytes(rank + "-" + subject + "-2018-52")) //行健的值
+          val put = new Put(Bytes.toBytes(rank + "-" + subject + "-" + TimeUtils.getWeek())) //行健的值
           put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("userId"), Bytes.toBytes(userId.toString))
           put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("grade"), Bytes.toBytes(grade.toString))
           put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("predict_score"), Bytes.toBytes(predictScore.toString))
@@ -747,9 +749,10 @@ object AbilityAssessment3 {
           val week_speek = t.get(10).asInstanceOf[Double].doubleValue()
           val week_accuracy = t.get(11).asInstanceOf[Double].doubleValue()
           val sortScore = t.get(12).asInstanceOf[Double].doubleValue()
+          val rank5 = t.get(13).asInstanceOf[Int].intValue()
 
-          val put = new Put(Bytes.toBytes(userId + "-" + subject + "-2019-1")) //行健的值
-          //          val put = new Put(Bytes.toBytes(userId + "-" + subject + "-" + TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis(), "yyyy-w"))) //行健的值
+          //          val put = new Put(Bytes.toBytes(userId + "-" + subject + "-2018-52")) //行健的值
+          val put = new Put(Bytes.toBytes(userId + "-" + subject + "-" + TimeUtils.getWeek())) //行健的值
           put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("grade"), Bytes.toBytes(grade.toString))
           put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("predict_score"), Bytes.toBytes(predictScore.toString))
           put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("subject"), Bytes.toBytes(subject.toString))
@@ -764,6 +767,7 @@ object AbilityAssessment3 {
           put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("sp"), Bytes.toBytes(sp.getOrElse(subject, "").toString))
           put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("spn"), Bytes.toBytes(spn.getOrElse(subject, "")))
           put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("sortScore"), Bytes.toBytes(sortScore.toString))
+          put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("rank5"), Bytes.toBytes(rank5.toString))
 
           if (subject == 1) {
 
