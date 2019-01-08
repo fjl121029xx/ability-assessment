@@ -167,9 +167,10 @@ object TimeUtils {
   def getWeek(): String = {
 
     import java.util.Calendar
+    val today = TimeUtils.convertTimeStamp2DateStr(System.currentTimeMillis() - 14400000, "yyyyMMdd")
     val calendar = Calendar.getInstance
     calendar.setFirstDayOfWeek(Calendar.MONDAY)
-
+    calendar.setTime(new SimpleDateFormat("yyyyMMdd").parse(today))
     //    calendar.setTime(new Nothing)
 
 
