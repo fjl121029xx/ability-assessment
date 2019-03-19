@@ -520,24 +520,110 @@ object PredictedScore {
         }
 
       }
-      case 3 => {
+      //65836
+      //65877
+      //65903
+      //65904
+      //65905
+      case 200100055 => {
         var score: Double = 0.0
 
         var correctNum = map.getOrElse(36667, (0, 0, 0, 0))._1 * 1.0 +
-          map.getOrElse(36710, (0, 0, 0, 0))._1 * 1.0 +
-          map.getOrElse(36735, (0, 0, 0, 0))._1 * 1.0 +
-          map.getOrElse(36748, (0, 0, 0, 0))._1 * 1.0 +
-          map.getOrElse(36789, (0, 0, 0, 0))._1 * 1.0 +
-          map.getOrElse(36846, (0, 0, 0, 0))._1 * 1.0 +
-          map.getOrElse(36831, (0, 0, 0, 0))._1 * 1.0
+          map.getOrElse(65836, (0, 0, 0, 0))._1 * 1.0 +
+          map.getOrElse(65877, (0, 0, 0, 0))._1 * 1.0 +
+          map.getOrElse(65903, (0, 0, 0, 0))._1 * 1.0 +
+          map.getOrElse(65904, (0, 0, 0, 0))._1 * 1.0 +
+          map.getOrElse(65905, (0, 0, 0, 0))._1 * 1.0
 
         var Num = map.getOrElse(36667, (0, 1, 0, 0))._2 * 1.0 +
-          map.getOrElse(36710, (0, 1, 0, 0))._2 * 1.0 +
-          map.getOrElse(36735, (0, 1, 0, 0))._2 * 1.0 +
-          map.getOrElse(36748, (0, 1, 0, 0))._2 * 1.0 +
-          map.getOrElse(36789, (0, 1, 0, 0))._2 * 1.0 +
-          map.getOrElse(36846, (0, 1, 0, 0))._2 * 1.0 +
-          map.getOrElse(36831, (0, 1, 0, 0))._2 * 1.0
+          map.getOrElse(65836, (0, 1, 0, 0))._2 * 1.0 +
+          map.getOrElse(65877, (0, 1, 0, 0))._2 * 1.0 +
+          map.getOrElse(65903, (0, 1, 0, 0))._2 * 1.0 +
+          map.getOrElse(65904, (0, 1, 0, 0))._2 * 1.0 +
+          map.getOrElse(65905, (0, 1, 0, 0))._2 * 1.0
+
+        if (isWeek == 0 && Num < 120) {
+          defaultScore = 0
+        } else {
+          score += correctNum / Num
+          defaultScore = score * 100
+        }
+      }
+      case 200100054 => {
+        var score: Double = 0.0
+
+        var correctNum = map.getOrElse(36667, (0, 0, 0, 0))._1 * 1.0 +
+          map.getOrElse(65836, (0, 0, 0, 0))._1 * 1.0 +
+          map.getOrElse(65877, (0, 0, 0, 0))._1 * 1.0 +
+          map.getOrElse(65903, (0, 0, 0, 0))._1 * 1.0 +
+          map.getOrElse(65904, (0, 0, 0, 0))._1 * 1.0 +
+          map.getOrElse(65905, (0, 0, 0, 0))._1 * 1.0
+
+        var Num = map.getOrElse(36667, (0, 1, 0, 0))._2 * 1.0 +
+          map.getOrElse(65836, (0, 1, 0, 0))._2 * 1.0 +
+          map.getOrElse(65877, (0, 1, 0, 0))._2 * 1.0 +
+          map.getOrElse(65903, (0, 1, 0, 0))._2 * 1.0 +
+          map.getOrElse(65904, (0, 1, 0, 0))._2 * 1.0 +
+          map.getOrElse(65905, (0, 1, 0, 0))._2 * 1.0
+
+        if (isWeek == 0 && Num < 120) {
+          defaultScore = 0
+        } else {
+          score += correctNum / Num
+          defaultScore = score * 100
+        }
+      }
+      case 200100057 => {
+        var score: Double = 0.0
+
+        var correctNum = map.getOrElse(36667, (0, 0, 0, 0))._1 * 1.0 +
+          map.getOrElse(65836, (0, 0, 0, 0))._1 * 1.0 +
+          map.getOrElse(65877, (0, 0, 0, 0))._1 * 1.0 +
+          map.getOrElse(65903, (0, 0, 0, 0))._1 * 1.0 +
+          map.getOrElse(65904, (0, 0, 0, 0))._1 * 1.0 +
+          map.getOrElse(65905, (0, 0, 0, 0))._1 * 1.0
+
+        var Num = map.getOrElse(36667, (0, 1, 0, 0))._2 * 1.0 +
+          map.getOrElse(65836, (0, 1, 0, 0))._2 * 1.0 +
+          map.getOrElse(65877, (0, 1, 0, 0))._2 * 1.0 +
+          map.getOrElse(65903, (0, 1, 0, 0))._2 * 1.0 +
+          map.getOrElse(65904, (0, 1, 0, 0))._2 * 1.0 +
+          map.getOrElse(65905, (0, 1, 0, 0))._2 * 1.0
+
+        if (isWeek == 0 && Num < 120) {
+          defaultScore = 0
+        } else {
+          score += correctNum / Num
+          defaultScore = score * 100
+        }
+      }
+      //65836
+      //65877
+      //65903
+      //65904
+      //65905
+      //66089
+      //65902
+      case 200100056 => {
+        var score: Double = 0.0
+
+        var correctNum = map.getOrElse(36667, (0, 0, 0, 0))._1 * 1.0 +
+          map.getOrElse(65836, (0, 0, 0, 0))._1 * 1.0 +
+          map.getOrElse(65877, (0, 0, 0, 0))._1 * 1.0 +
+          map.getOrElse(65903, (0, 0, 0, 0))._1 * 1.0 +
+          map.getOrElse(65904, (0, 0, 0, 0))._1 * 1.0 +
+          map.getOrElse(66089, (0, 0, 0, 0))._1 * 1.0 +
+          map.getOrElse(65902, (0, 0, 0, 0))._1 * 1.0 +
+          map.getOrElse(65905, (0, 0, 0, 0))._1 * 1.0
+
+        var Num = map.getOrElse(36667, (0, 1, 0, 0))._2 * 1.0 +
+          map.getOrElse(65836, (0, 1, 0, 0))._2 * 1.0 +
+          map.getOrElse(65877, (0, 1, 0, 0))._2 * 1.0 +
+          map.getOrElse(65903, (0, 1, 0, 0))._2 * 1.0 +
+          map.getOrElse(65904, (0, 1, 0, 0))._2 * 1.0 +
+          map.getOrElse(66089, (0, 1, 0, 0))._2 * 1.0 +
+          map.getOrElse(66089, (0, 1, 0, 0))._2 * 1.0 +
+          map.getOrElse(65905, (0, 1, 0, 0))._2 * 1.0
 
         if (isWeek == 0 && Num < 120) {
           defaultScore = 0

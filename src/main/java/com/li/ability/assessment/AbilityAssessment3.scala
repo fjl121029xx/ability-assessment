@@ -224,65 +224,105 @@ object AbilityAssessment3 {
     // 统计科目下的用户数量
     val userCountXc = sc.longAccumulator("userCountXc")
     val userCountGj = sc.longAccumulator("userCountGj")
-    val userCountZc = sc.longAccumulator("userCountZc")
+    val userCountZcB = sc.longAccumulator("userCountZcB")
     val userCountGa = sc.longAccumulator("userCountGa")
     // 合格用户
     val qualifiedUserCountXc = sc.longAccumulator("qualifiedUserCountXc")
     val qualifiedUserCountGj = sc.longAccumulator("qualifiedUserCountGj")
-    val qualifiedUserCountZc = sc.longAccumulator("qualifiedUserCountZc")
+    val qualifiedUserCountZcB = sc.longAccumulator("qualifiedUserCountZcB")
     val qualifiedUserCountGa = sc.longAccumulator("qualifiedUserCountGa")
     // 统计科目下的做题数量
     val qCountXc = sc.longAccumulator("qCountXc")
     val qCountGj = sc.longAccumulator("qCountGj")
-    val qCountZc = sc.longAccumulator("qCountZc")
+    val qCountZcB = sc.longAccumulator("qCountZcB")
     val qCountGa = sc.longAccumulator("qCountGa")
     // 统计科目下的做题时长
     val timeToltalXc = sc.longAccumulator("timeToltalXc")
     val timeTotalGj = sc.longAccumulator("timeTotalGj")
-    val timeTotalZc = sc.longAccumulator("timeTotalZc")
+    val timeTotalZcB = sc.longAccumulator("timeTotalZcB")
     val timeTotalGa = sc.longAccumulator("timeTotalGa")
     // 统计科目下的正确数量
     val cNumXc = sc.longAccumulator("cNumXc")
     val cNumGj = sc.longAccumulator("cNumGj")
-    val cNumZc = sc.longAccumulator("cNumZc")
+    val cNumZcB = sc.longAccumulator("cNumZcB")
     val cNumGa = sc.longAccumulator("cNumGa")
 
     val undoNumXc = sc.longAccumulator("undoNumXc")
     val undoNumGj = sc.longAccumulator("undoNumGj")
-    val undoNumZc = sc.longAccumulator("undoNumZc")
+    val undoNumZcB = sc.longAccumulator("undoNumZcB")
     val undoNumGa = sc.longAccumulator("undoNumGa")
 
+
+    val userCountZcC = sc.longAccumulator("userCountZcC")
+    val qualifiedUserCountZcC = sc.longAccumulator("qualifiedUserCountZcC")
+    val qCountZcC = sc.longAccumulator("qCountZcC")
+    val timeTotalZcC = sc.longAccumulator("timeTotalZcC")
+    val cNumZcC = sc.longAccumulator("cNumZcC")
+    val undoNumZcC = sc.longAccumulator("undoNumZcC")
+
+    val userCountZcA = sc.longAccumulator("userCountZcA")
+    val qualifiedUserCountZcA = sc.longAccumulator("qualifiedUserCountZcA")
+    val qCountZcA = sc.longAccumulator("qCountZcA")
+    val timeTotalZcA = sc.longAccumulator("timeTotalZcA")
+    val cNumZcA = sc.longAccumulator("cNumZcA")
+    val undoNumZcA = sc.longAccumulator("undoNumZcA")
+
+    val userCountZcD = sc.longAccumulator("userCountZcD")
+    val qualifiedUserCountZcD = sc.longAccumulator("qualifiedUserCountZcD")
+    val qCountZcD = sc.longAccumulator("qCountZcD")
+    val timeTotalZcD = sc.longAccumulator("timeTotalZcD")
+    val cNumZcD = sc.longAccumulator("cNumZcD")
+    val undoNumZcD = sc.longAccumulator("undoNumZcD")
     /**
       * 周
       */
     // 周:统计科目下的用户数量
     val weekUCountXc = sc.longAccumulator("weekUCountXc")
     val weekUCountGj = sc.longAccumulator("weekUCountGj")
-    val weekUCountZc = sc.longAccumulator("weekUCountZc")
+    val weekUCountZcB = sc.longAccumulator("weekUCountZcB")
     val weekUCountGa = sc.longAccumulator("weekUCountGa")
 
     // 周:统计科目下的做题数量
     val weekQCountXc = sc.longAccumulator("weekQCountXc")
     val weekQCountGj = sc.longAccumulator("weekQCountGj")
-    val weekQCountZc = sc.longAccumulator("weekQCountZc")
+    val weekQCountZcB = sc.longAccumulator("weekQCountZcB")
     val weekQCountGa = sc.longAccumulator("weekQCountGa")
 
     // 周:统计科目下的做题时长
     val weekTTotalXc = sc.longAccumulator("weekTTotalXc")
     val weekTTotalGj = sc.longAccumulator("weekTTotalGj")
-    val weekTTotalZc = sc.longAccumulator("weekTTotalZc")
+    val weekTTotalZcB = sc.longAccumulator("weekTTotalZcB")
     val weekTTotalGa = sc.longAccumulator("weekTTotalGa")
 
     // 周:统计科目下的正确数量
     val weekCNumXc = sc.longAccumulator("weekCNumXc")
     val weekCNumGj = sc.longAccumulator("weekCNumGj")
-    val weekCNumZc = sc.longAccumulator("weekCNumZc")
+    val weekCNumZcB = sc.longAccumulator("weekCNumZcB")
     val weekCNumGa = sc.longAccumulator("weekCNumGa")
 
     val weekUndoNumXc = sc.longAccumulator("weekUndoNumXc")
     val weekUndoNumGj = sc.longAccumulator("weekUndoNumGj")
-    val weekUndoNumZc = sc.longAccumulator("weekUndoNumZc")
+    val weekUndoNumZcB = sc.longAccumulator("weekUndoNumZcB")
     val weekUndoNumGa = sc.longAccumulator("weekUndoNumGa")
+
+    val weekUCountZcA = sc.longAccumulator("weekUCountZcA")
+    val weekQCountZcA = sc.longAccumulator("weekQCountZcA")
+    val weekTTotalZcA = sc.longAccumulator("weekTTotalZcA")
+    val weekCNumZcA = sc.longAccumulator("weekCNumZcA")
+    val weekUndoNumZcA = sc.longAccumulator("weekUndoNumZcA")
+
+    val weekUCountZcC = sc.longAccumulator("weekUCountZcC")
+    val weekQCountZcC = sc.longAccumulator("weekQCountZcC")
+    val weekTTotalZcC = sc.longAccumulator("weekTTotalZcC")
+    val weekCNumZcC = sc.longAccumulator("weekCNumZcC")
+    val weekUndoNumZcC = sc.longAccumulator("weekUndoNumZcC")
+
+
+    val weekUCountZcD = sc.longAccumulator("weekUCountZcD")
+    val weekQCountZcD = sc.longAccumulator("weekQCountZcD")
+    val weekTTotalZcD = sc.longAccumulator("weekTTotalZcD")
+    val weekCNumZcD = sc.longAccumulator("weekCNumZcD")
+    val weekUndoNumZcD = sc.longAccumulator("weekUndoNumZcD")
 
 
     predicted_score.cache()
@@ -329,15 +369,45 @@ object AbilityAssessment3 {
             if (score >= 20.0) {
               qualifiedUserCountGj.add(1)
             }
-          } else if (subject == 3) {
-            userCountZc.add(1)
-            qCountZc.add(predictedScore(1).toLong)
-            timeTotalZc.add(predictedScore(2).toLong)
-            cNumZc.add(predictedScore(7).toLong)
-            undoNumZc.add(predictedScore(9).toLong)
+          } else if (subject == 200100055) {
+            userCountZcB.add(1)
+            qCountZcB.add(predictedScore(1).toLong)
+            timeTotalZcB.add(predictedScore(2).toLong)
+            cNumZcB.add(predictedScore(7).toLong)
+            undoNumZcB.add(predictedScore(9).toLong)
 
             if (score >= 20.0) {
-              qualifiedUserCountZc.add(1)
+              qualifiedUserCountZcB.add(1)
+            }
+          } else if (subject == 200100054) {
+            userCountZcA.add(1)
+            qCountZcA.add(predictedScore(1).toLong)
+            timeTotalZcA.add(predictedScore(2).toLong)
+            cNumZcA.add(predictedScore(7).toLong)
+            undoNumZcA.add(predictedScore(9).toLong)
+
+            if (score >= 20.0) {
+              qualifiedUserCountZcA.add(1)
+            }
+          } else if (subject == 200100056) {
+            userCountZcC.add(1)
+            qCountZcC.add(predictedScore(1).toLong)
+            timeTotalZcC.add(predictedScore(2).toLong)
+            cNumZcC.add(predictedScore(7).toLong)
+            undoNumZcC.add(predictedScore(9).toLong)
+
+            if (score >= 20.0) {
+              qualifiedUserCountZcC.add(1)
+            }
+          } else if (subject == 200100057) {
+            userCountZcD.add(1)
+            qCountZcD.add(predictedScore(1).toLong)
+            timeTotalZcD.add(predictedScore(2).toLong)
+            cNumZcD.add(predictedScore(7).toLong)
+            undoNumZcD.add(predictedScore(9).toLong)
+
+            if (score >= 20.0) {
+              qualifiedUserCountZcD.add(1)
             }
           }
           else if (subject == 100100175) {
@@ -384,12 +454,33 @@ object AbilityAssessment3 {
     val _GjCNum = sc.broadcast(cNumGj.value.toString)
     val _GjUndoNum = sc.broadcast(undoNumGj.value.toString)
 
-    val _ZcUCount = sc.broadcast(userCountZc.value.toString)
-    val _ZcQUCount = sc.broadcast(qualifiedUserCountZc.value.toString)
-    val _ZcQCount = sc.broadcast(qCountZc.value.toString)
-    val _ZcTTotal = sc.broadcast(timeTotalZc.value.toString)
-    val _ZcCNumt = sc.broadcast(cNumZc.value.toString)
-    val _ZcUndoNum = sc.broadcast(undoNumZc.value.toString)
+    val _ZcUCountB = sc.broadcast(userCountZcB.value.toString)
+    val _ZcQUCountB = sc.broadcast(qualifiedUserCountZcB.value.toString)
+    val _ZcQCountB = sc.broadcast(qCountZcB.value.toString)
+    val _ZcTTotalB = sc.broadcast(timeTotalZcB.value.toString)
+    val _ZcCNumtB = sc.broadcast(cNumZcB.value.toString)
+    val _ZcUndoNumB = sc.broadcast(undoNumZcB.value.toString)
+
+    val _ZcUCountA = sc.broadcast(userCountZcA.value.toString)
+    val _ZcQUCountA = sc.broadcast(qualifiedUserCountZcA.value.toString)
+    val _ZcQCountA = sc.broadcast(qCountZcA.value.toString)
+    val _ZcTTotalA = sc.broadcast(timeTotalZcA.value.toString)
+    val _ZcCNumtA = sc.broadcast(cNumZcA.value.toString)
+    val _ZcUndoNumA = sc.broadcast(undoNumZcA.value.toString)
+
+    val _ZcUCountC = sc.broadcast(userCountZcC.value.toString)
+    val _ZcQUCountC = sc.broadcast(qualifiedUserCountZcC.value.toString)
+    val _ZcQCountC = sc.broadcast(qCountZcC.value.toString)
+    val _ZcTTotalC = sc.broadcast(timeTotalZcC.value.toString)
+    val _ZcCNumtC = sc.broadcast(cNumZcC.value.toString)
+    val _ZcUndoNumC = sc.broadcast(undoNumZcC.value.toString)
+
+    val _ZcUCountD = sc.broadcast(userCountZcD.value.toString)
+    val _ZcQUCountD = sc.broadcast(qualifiedUserCountZcD.value.toString)
+    val _ZcQCountD = sc.broadcast(qCountZcD.value.toString)
+    val _ZcTTotalD = sc.broadcast(timeTotalZcD.value.toString)
+    val _ZcCNumtD = sc.broadcast(cNumZcD.value.toString)
+    val _ZcUndoNumD = sc.broadcast(undoNumZcD.value.toString)
 
     val _GaUCount = sc.broadcast(userCountGa.value.toString)
     val _GaQUCount = sc.broadcast(qualifiedUserCountGa.value.toString)
@@ -438,7 +529,7 @@ object AbilityAssessment3 {
 
 
     val tsTop10 = ts.where("rank <= 1000")
-//    tsTop10.show(30000)
+    //    tsTop10.show(30000)
 
 
     val hbaseConf = HBaseConfiguration.create()
@@ -524,14 +615,38 @@ object AbilityAssessment3 {
             put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("exerciseTimeTotal"), Bytes.toBytes(_GjTTotal.value))
             put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("correctNum"), Bytes.toBytes(_GjCNum.value))
             put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("undoCount"), Bytes.toBytes(_GjUndoNum.value))
-          } else if (subject == 3) {
+          } else if (subject == 200100055) {
 
-            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("userCount"), Bytes.toBytes(_ZcUCount.value))
-            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("qualifiedUserCount"), Bytes.toBytes(_ZcQUCount.value))
-            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("quesCount"), Bytes.toBytes(_ZcQCount.value))
-            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("exerciseTimeTotal"), Bytes.toBytes(_ZcTTotal.value))
-            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("correctNum"), Bytes.toBytes(_ZcCNumt.value))
-            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("undoCount"), Bytes.toBytes(_ZcUndoNum.value))
+            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("userCount"), Bytes.toBytes(_ZcUCountB.value))
+            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("qualifiedUserCount"), Bytes.toBytes(_ZcQUCountB.value))
+            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("quesCount"), Bytes.toBytes(_ZcQCountB.value))
+            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("exerciseTimeTotal"), Bytes.toBytes(_ZcTTotalB.value))
+            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("correctNum"), Bytes.toBytes(_ZcCNumtB.value))
+            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("undoCount"), Bytes.toBytes(_ZcUndoNumB.value))
+          } else if (subject == 200100054) {
+
+            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("userCount"), Bytes.toBytes(_ZcUCountA.value))
+            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("qualifiedUserCount"), Bytes.toBytes(_ZcQUCountA.value))
+            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("quesCount"), Bytes.toBytes(_ZcQCountA.value))
+            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("exerciseTimeTotal"), Bytes.toBytes(_ZcTTotalA.value))
+            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("correctNum"), Bytes.toBytes(_ZcCNumtA.value))
+            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("undoCount"), Bytes.toBytes(_ZcUndoNumA.value))
+          } else if (subject == 200100056) {
+
+            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("userCount"), Bytes.toBytes(_ZcUCountC.value))
+            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("qualifiedUserCount"), Bytes.toBytes(_ZcQUCountC.value))
+            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("quesCount"), Bytes.toBytes(_ZcQCountC.value))
+            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("exerciseTimeTotal"), Bytes.toBytes(_ZcTTotalC.value))
+            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("correctNum"), Bytes.toBytes(_ZcCNumtC.value))
+            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("undoCount"), Bytes.toBytes(_ZcUndoNumC.value))
+          } else if (subject == 200100057) {
+
+            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("userCount"), Bytes.toBytes(_ZcUCountD.value))
+            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("qualifiedUserCount"), Bytes.toBytes(_ZcQUCountD.value))
+            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("quesCount"), Bytes.toBytes(_ZcQCountD.value))
+            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("exerciseTimeTotal"), Bytes.toBytes(_ZcTTotalD.value))
+            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("correctNum"), Bytes.toBytes(_ZcCNumtD.value))
+            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("undoCount"), Bytes.toBytes(_ZcUndoNumD.value))
           } else if (subject == 100100175) {
 
             put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("userCount"), Bytes.toBytes(_GaUCount.value))
@@ -577,11 +692,26 @@ object AbilityAssessment3 {
               weekQCountGj.add(predictedScore(5).toLong)
               weekTTotalGj.add(predictedScore(6).toLong)
               weekCNumGj.add(predictedScore(8).toLong)
-            } else if (subject == 3) {
-              weekUCountZc.add(1)
-              weekQCountZc.add(predictedScore(5).toLong)
-              weekTTotalZc.add(predictedScore(6).toLong)
-              weekCNumZc.add(predictedScore(8).toLong)
+            } else if (subject == 200100055) {
+              weekUCountZcB.add(1)
+              weekQCountZcB.add(predictedScore(5).toLong)
+              weekTTotalZcB.add(predictedScore(6).toLong)
+              weekCNumZcB.add(predictedScore(8).toLong)
+            } else if (subject == 200100054) {
+              weekUCountZcA.add(1)
+              weekQCountZcA.add(predictedScore(5).toLong)
+              weekTTotalZcA.add(predictedScore(6).toLong)
+              weekCNumZcA.add(predictedScore(8).toLong)
+            } else if (subject == 200100056) {
+              weekUCountZcC.add(1)
+              weekQCountZcC.add(predictedScore(5).toLong)
+              weekTTotalZcC.add(predictedScore(6).toLong)
+              weekCNumZcC.add(predictedScore(8).toLong)
+            } else if (subject == 200100057) {
+              weekUCountZcD.add(1)
+              weekQCountZcD.add(predictedScore(5).toLong)
+              weekTTotalZcD.add(predictedScore(6).toLong)
+              weekCNumZcD.add(predictedScore(8).toLong)
             } else if (subject == 100100175) {
               weekUCountGa.add(1)
               weekQCountGa.add(predictedScore(5).toLong)
@@ -628,11 +758,30 @@ object AbilityAssessment3 {
     val _GjWeekUndonum = sc.broadcast(weekUndoNumGj.value.toString)
 
 
-    val _ZcWeekUCount = sc.broadcast(weekUCountZc.value.toString)
-    val _ZcWeekQCount = sc.broadcast(weekQCountZc.value.toString)
-    val _ZcWeekTTotal = sc.broadcast(weekTTotalZc.value.toString)
-    val _ZcWeekCNum = sc.broadcast(weekCNumZc.value.toString)
-    val _ZcWeekUndonum = sc.broadcast(weekUndoNumZc.value.toString)
+    val _ZcWeekUCountB = sc.broadcast(weekUCountZcB.value.toString)
+    val _ZcWeekQCountB = sc.broadcast(weekQCountZcB.value.toString)
+    val _ZcWeekTTotalB = sc.broadcast(weekTTotalZcB.value.toString)
+    val _ZcWeekCNumB = sc.broadcast(weekCNumZcB.value.toString)
+    val _ZcWeekUndonumB = sc.broadcast(weekUndoNumZcB.value.toString)
+
+    val _ZcWeekUCountA = sc.broadcast(weekUCountZcA.value.toString)
+    val _ZcWeekQCountA = sc.broadcast(weekQCountZcA.value.toString)
+    val _ZcWeekTTotalA = sc.broadcast(weekTTotalZcA.value.toString)
+    val _ZcWeekCNumA = sc.broadcast(weekCNumZcA.value.toString)
+    val _ZcWeekUndonumA = sc.broadcast(weekUndoNumZcA.value.toString)
+
+    val _ZcWeekUCountC = sc.broadcast(weekUCountZcC.value.toString)
+    val _ZcWeekQCountC = sc.broadcast(weekQCountZcC.value.toString)
+    val _ZcWeekTTotalC = sc.broadcast(weekTTotalZcC.value.toString)
+    val _ZcWeekCNumC = sc.broadcast(weekCNumZcC.value.toString)
+    val _ZcWeekUndonumC = sc.broadcast(weekUndoNumZcC.value.toString)
+
+    val _ZcWeekUCountD = sc.broadcast(weekUCountZcD.value.toString)
+    val _ZcWeekQCountD = sc.broadcast(weekQCountZcD.value.toString)
+    val _ZcWeekTTotalD = sc.broadcast(weekTTotalZcD.value.toString)
+    val _ZcWeekCNumD = sc.broadcast(weekCNumZcD.value.toString)
+    val _ZcWeekUndonumD = sc.broadcast(weekUndoNumZcD.value.toString)
+
 
     val _GaWeekUCount = sc.broadcast(weekUCountGa.value.toString)
     val _GaWeekQCount = sc.broadcast(weekQCountGa.value.toString)
@@ -661,7 +810,7 @@ object AbilityAssessment3 {
 
 
     val weekTop10 = week.where("rank <= 1000")
-//    weekTop10.show(30000)
+    //    weekTop10.show(30000)
 
     val week_top10_hbaseConf = HBaseConfiguration.create()
     week_top10_hbaseConf.set("hbase.zookeeper.quorum", "192.168.100.68,192.168.100.70,192.168.100.72")
@@ -783,15 +932,35 @@ object AbilityAssessment3 {
             put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("timeTotal"), Bytes.toBytes(_GjWeekTTotal.value))
             put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("correctNum"), Bytes.toBytes(_GjWeekCNum.value))
             put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("undoNum"), Bytes.toBytes(_GjWeekUndonum.value))
-          } else if (subject == 3) {
+          } else if (subject == 200100055) {
 
-            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("userCount"), Bytes.toBytes(_ZcWeekUCount.value))
-            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("quesCount"), Bytes.toBytes(_ZcWeekQCount.value))
-            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("timeTotal"), Bytes.toBytes(_ZcWeekTTotal.value))
-            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("correctNum"), Bytes.toBytes(_ZcWeekCNum.value))
-            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("undoNum"), Bytes.toBytes(_ZcWeekUndonum.value))
-          }
-          else if (subject == 100100175) {
+            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("userCount"), Bytes.toBytes(_ZcWeekUCountB.value))
+            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("quesCount"), Bytes.toBytes(_ZcWeekQCountB.value))
+            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("timeTotal"), Bytes.toBytes(_ZcWeekTTotalB.value))
+            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("correctNum"), Bytes.toBytes(_ZcWeekCNumB.value))
+            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("undoNum"), Bytes.toBytes(_ZcWeekUndonumB.value))
+          } else if (subject == 200100054) {
+
+            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("userCount"), Bytes.toBytes(_ZcWeekUCountA.value))
+            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("quesCount"), Bytes.toBytes(_ZcWeekQCountA.value))
+            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("timeTotal"), Bytes.toBytes(_ZcWeekTTotalA.value))
+            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("correctNum"), Bytes.toBytes(_ZcWeekCNumA.value))
+            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("undoNum"), Bytes.toBytes(_ZcWeekUndonumA.value))
+          } else if (subject == 200100056) {
+
+            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("userCount"), Bytes.toBytes(_ZcWeekUCountC.value))
+            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("quesCount"), Bytes.toBytes(_ZcWeekQCountC.value))
+            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("timeTotal"), Bytes.toBytes(_ZcWeekTTotalC.value))
+            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("correctNum"), Bytes.toBytes(_ZcWeekCNumC.value))
+            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("undoNum"), Bytes.toBytes(_ZcWeekUndonumC.value))
+          } else if (subject == 200100057) {
+
+            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("userCount"), Bytes.toBytes(_ZcWeekUCountD.value))
+            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("quesCount"), Bytes.toBytes(_ZcWeekQCountD.value))
+            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("timeTotal"), Bytes.toBytes(_ZcWeekTTotalD.value))
+            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("correctNum"), Bytes.toBytes(_ZcWeekCNumD.value))
+            put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("undoNum"), Bytes.toBytes(_ZcWeekUndonumD.value))
+          } else if (subject == 100100175) {
 
             put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("userCount"), Bytes.toBytes(_GaWeekUCount.value))
             put.addColumn(Bytes.toBytes(t_family), Bytes.toBytes("quesCount"), Bytes.toBytes(_GaWeekQCount.value))
