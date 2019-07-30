@@ -98,7 +98,7 @@ object AbilityAssessment2 {
 
     val ts_predicted_score_df = predicted_score_rdd.mapPartitions {
       ite =>
-        var arr = new ArrayBuffer[TS_AbilityAssessment]()
+        var arr = new ArrayBuffer[S_C_A_A]()
 
         while (ite.hasNext) {
           val n = ite.next()
@@ -120,7 +120,7 @@ object AbilityAssessment2 {
             gongAn.add("1," + predictedScore(1) + "," + predictedScore(2) + "," + predictedScore(7))
           }
 
-          arr += TS_AbilityAssessment(
+          arr += S_C_A_A(
             userId, //userId
             PredictedScore.getScore(predictedScore.head, subject,0), //total_station_grade: Double,
             predictedScore.head, //total_station_predict_score

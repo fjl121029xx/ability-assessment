@@ -61,7 +61,7 @@ object AbilityAssessment3 {
     var t_weekTop = "week_top10_ability_assessment"
     var t_family = "ability_assessment_info"
 
-    var mysql = "jdbc:mysql://192.168.100.18/pandora?characterEncoding=UTF-8&transformedBitIsBoolean=false&tinyInt1isBit=false"
+    var mysql = "jdbc:mysql://192.168.100.154/pandora?characterEncoding=UTF-8&transformedBitIsBoolean=false&tinyInt1isBit=false"
     var user = "vhuatu"
     var password = "vhuatu_2013"
 
@@ -329,7 +329,7 @@ object AbilityAssessment3 {
 
     val ts_predicted_score_df = predicted_score.mapPartitions {
       ite =>
-        var arr = new ArrayBuffer[TS_AbilityAssessment]()
+        var arr = new ArrayBuffer[S_C_A_A]()
         val m = subjetPointName.value
 
         while (ite.hasNext) {
@@ -422,7 +422,7 @@ object AbilityAssessment3 {
             }
           }
           //          println(userCountXc.value)
-          arr += TS_AbilityAssessment(
+          arr += S_C_A_A(
             userId, //userId
             score, //total_station_grade: Double,
             predictedScore(0), //total_station_predict_score
